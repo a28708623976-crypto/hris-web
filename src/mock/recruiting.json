@@ -1,0 +1,182 @@
+{
+  "jobs": [
+    {
+      "id": "JOB001",
+      "title": "AI 编剧",
+      "department": "内容创作部",
+      "headcount": 2,
+      "status": "open",
+      "applied": 24,
+      "interviewing": 5,
+      "hired": 1,
+      "created_at": "2026-11-01",
+      "description": "参与原创内容与产品制作，推动团队项目高质量交付。",
+      "requirements": "具备相关项目经验，善于沟通协作。",
+      "location": "上海",
+      "salary_range": "12k–20k"
+    },
+    {
+      "id": "JOB002",
+      "title": "AI 视效工程师",
+      "department": "技术部",
+      "headcount": 1,
+      "status": "open",
+      "applied": 18,
+      "interviewing": 3,
+      "hired": 0,
+      "created_at": "2026-11-01",
+      "description": "参与原创内容与产品制作，推动团队项目高质量交付。",
+      "requirements": "具备相关项目经验，善于沟通协作。",
+      "location": "上海",
+      "salary_range": "12k–20k"
+    },
+    {
+      "id": "JOB003",
+      "title": "视觉设计师",
+      "department": "视觉设计部",
+      "headcount": 1,
+      "status": "open",
+      "applied": 16,
+      "interviewing": 4,
+      "hired": 1,
+      "created_at": "2026-11-01",
+      "description": "参与原创内容与产品制作，推动团队项目高质量交付。",
+      "requirements": "具备相关项目经验，善于沟通协作。",
+      "location": "上海",
+      "salary_range": "12k–20k"
+    },
+    {
+      "id": "JOB004",
+      "title": "内容运营",
+      "department": "运营部",
+      "headcount": 1,
+      "status": "paused",
+      "applied": 12,
+      "interviewing": 2,
+      "hired": 0,
+      "created_at": "2026-11-01",
+      "description": "参与原创内容与产品制作，推动团队项目高质量交付。",
+      "requirements": "具备相关项目经验，善于沟通协作。",
+      "location": "上海",
+      "salary_range": "12k–20k"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "CAND001",
+      "name": "沈清禾",
+      "job_id": "JOB001",
+      "source": "BOSS直聘",
+      "stage": "screening",
+      "rating": 3,
+      "last_updated": "2026-11-21",
+      "phone": "139****2026",
+      "summary": "具备内容创作与跨团队项目协作经验。此为虚构候选人简历摘要，具体经历待核实。",
+      "notes": "",
+      "created_at": "2026-11-18"
+    },
+    {
+      "id": "CAND002",
+      "name": "顾言",
+      "job_id": "JOB002",
+      "source": "内推",
+      "stage": "interviewing",
+      "rating": 4,
+      "last_updated": "2026-11-21",
+      "phone": "139****2026",
+      "summary": "具备内容创作与跨团队项目协作经验。此为虚构候选人简历摘要，具体经历待核实。",
+      "notes": "",
+      "created_at": "2026-11-18"
+    },
+    {
+      "id": "CAND003",
+      "name": "陆星遥",
+      "job_id": "JOB003",
+      "source": "官网",
+      "stage": "offer",
+      "rating": 5,
+      "last_updated": "2026-11-21",
+      "phone": "139****2026",
+      "summary": "具备内容创作与跨团队项目协作经验。此为虚构候选人简历摘要，具体经历待核实。",
+      "notes": "",
+      "created_at": "2026-11-18"
+    },
+    {
+      "id": "CAND004",
+      "name": "苏念",
+      "job_id": "JOB001",
+      "source": "猎头",
+      "stage": "hired",
+      "rating": 3,
+      "last_updated": "2026-11-21",
+      "phone": "139****2026",
+      "summary": "具备内容创作与跨团队项目协作经验。此为虚构候选人简历摘要，具体经历待核实。",
+      "notes": "",
+      "created_at": "2026-11-18"
+    },
+    {
+      "id": "CAND005",
+      "name": "温以宁",
+      "job_id": "JOB002",
+      "source": "BOSS直聘",
+      "stage": "rejected",
+      "rating": 4,
+      "last_updated": "2026-11-21",
+      "phone": "139****2026",
+      "summary": "具备内容创作与跨团队项目协作经验。此为虚构候选人简历摘要，具体经历待核实。",
+      "notes": "",
+      "created_at": "2026-11-18"
+    },
+    {
+      "id": "CAND006",
+      "name": "江知夏",
+      "job_id": "JOB003",
+      "source": "内推",
+      "stage": "screening",
+      "rating": 5,
+      "last_updated": "2026-11-21",
+      "phone": "139****2026",
+      "summary": "具备内容创作与跨团队项目协作经验。此为虚构候选人简历摘要，具体经历待核实。",
+      "notes": "",
+      "created_at": "2026-11-18"
+    },
+    {
+      "id": "CAND007",
+      "name": "程亦舟",
+      "job_id": "JOB001",
+      "source": "官网",
+      "stage": "interviewing",
+      "rating": 3,
+      "last_updated": "2026-11-21",
+      "phone": "139****2026",
+      "summary": "具备内容创作与跨团队项目协作经验。此为虚构候选人简历摘要，具体经历待核实。",
+      "notes": "",
+      "created_at": "2026-11-18"
+    },
+    {
+      "id": "CAND008",
+      "name": "叶书宁",
+      "job_id": "JOB002",
+      "source": "猎头",
+      "stage": "offer",
+      "rating": 4,
+      "last_updated": "2026-11-21",
+      "phone": "139****2026",
+      "summary": "具备内容创作与跨团队项目协作经验。此为虚构候选人简历摘要，具体经历待核实。",
+      "notes": "",
+      "created_at": "2026-11-18"
+    }
+  ],
+  "interviews": [
+    {
+      "id": "INT001",
+      "candidate_id": "CAND002",
+      "interviewer": "陈嘉宁",
+      "round": "专业一面",
+      "time": "2026-11-24T14:00",
+      "mode": "视频",
+      "location": "演示会议室 A",
+      "status": "scheduled"
+    }
+  ]
+}

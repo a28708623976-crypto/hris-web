@@ -1,0 +1,2 @@
+import {useEffect,useState} from 'react';
+export function useFetch<T>(loader:()=>Promise<T>){const [data,setData]=useState<T|null>(null);const [error,setError]=useState<string|null>(null);const [loading,setLoading]=useState(true);useEffect(()=>{let alive=true;loader().then(d=>alive&&setData(d)).catch(e=>alive&&setError(String(e))).finally(()=>alive&&setLoading(false));return()=>{alive=false}},[loader]);return {data,error,loading}}

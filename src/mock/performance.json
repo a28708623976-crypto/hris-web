@@ -1,0 +1,157 @@
+{
+  "cycles": [
+    {
+      "id": "PC001",
+      "name": "2026 年 Q4 绩效考核",
+      "start": "2026-10-01",
+      "end": "2026-12-31",
+      "stage": "self_review",
+      "score_type": "percentage",
+      "coverage": "all",
+      "headcount": 11,
+      "kpi": 70,
+      "attitude": 30,
+      "deadlines": [
+        "2026-11-30",
+        "2026-12-10",
+        "2026-12-20"
+      ]
+    },
+    {
+      "id": "PC002",
+      "name": "2026 年 Q3 绩效考核",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "stage": "completed",
+      "score_type": "percentage",
+      "coverage": "all",
+      "headcount": 11,
+      "kpi": 70,
+      "attitude": 30,
+      "deadlines": []
+    }
+  ],
+  "reviews": [
+    {
+      "id": "RV001",
+      "cycle_id": "PC001",
+      "employee_id": "EMP001",
+      "self_score": 85,
+      "manager_score": 88,
+      "final_score": 86,
+      "grade": "A",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV002",
+      "cycle_id": "PC001",
+      "employee_id": "EMP002",
+      "self_score": 86,
+      "manager_score": 89,
+      "final_score": 87,
+      "grade": "B",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV003",
+      "cycle_id": "PC001",
+      "employee_id": "EMP003",
+      "self_score": 87,
+      "manager_score": 90,
+      "final_score": 88,
+      "grade": "B",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV004",
+      "cycle_id": "PC001",
+      "employee_id": "EMP004",
+      "self_score": 88,
+      "manager_score": 91,
+      "final_score": 89,
+      "grade": "A",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV005",
+      "cycle_id": "PC001",
+      "employee_id": "EMP005",
+      "self_score": 89,
+      "manager_score": 92,
+      "final_score": 90,
+      "grade": "B",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV006",
+      "cycle_id": "PC001",
+      "employee_id": "EMP006",
+      "self_score": 90,
+      "manager_score": 88,
+      "final_score": 91,
+      "grade": "B",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV007",
+      "cycle_id": "PC001",
+      "employee_id": "EMP007",
+      "self_score": 85,
+      "manager_score": 89,
+      "final_score": 92,
+      "grade": "A",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV008",
+      "cycle_id": "PC001",
+      "employee_id": "EMP008",
+      "self_score": 86,
+      "manager_score": 90,
+      "final_score": 86,
+      "grade": "B",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV009",
+      "cycle_id": "PC001",
+      "employee_id": "EMP009",
+      "self_score": 87,
+      "manager_score": 91,
+      "final_score": 87,
+      "grade": "B",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV010",
+      "cycle_id": "PC001",
+      "employee_id": "EMP010",
+      "self_score": 88,
+      "manager_score": 92,
+      "final_score": 88,
+      "grade": "A",
+      "submitted": false,
+      "comment": ""
+    },
+    {
+      "id": "RV011",
+      "cycle_id": "PC001",
+      "employee_id": "EMP011",
+      "self_score": 89,
+      "manager_score": 88,
+      "final_score": 89,
+      "grade": "B",
+      "submitted": false,
+      "comment": ""
+    }
+  ]
+}

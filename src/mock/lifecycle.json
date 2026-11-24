@@ -1,0 +1,176 @@
+[
+  {
+    "id": "LC001",
+    "type": "onboard",
+    "status": "pending",
+    "employee_id": "EMP001",
+    "employee_name": "林晓梅",
+    "initiator": "李明",
+    "created_at": "2026-11-20",
+    "current_approver": "李明",
+    "data": {
+      "备注": "请核对人员资料，按流程完成审批。"
+    },
+    "steps": [
+      {
+        "role": "HR",
+        "name": "郑可欣",
+        "status": "approved",
+        "time": "2026-11-20 09:30",
+        "comment": "资料已核对"
+      },
+      {
+        "role": "HR 主管",
+        "name": "李明",
+        "status": "pending",
+        "time": null,
+        "comment": ""
+      }
+    ]
+  },
+  {
+    "id": "LC002",
+    "type": "confirm",
+    "status": "pending",
+    "employee_id": "EMP002",
+    "employee_name": "张伟",
+    "initiator": "李明",
+    "created_at": "2026-11-19",
+    "current_approver": "李明",
+    "data": {
+      "备注": "请核对人员资料，按流程完成审批。"
+    },
+    "steps": [
+      {
+        "role": "HR",
+        "name": "郑可欣",
+        "status": "approved",
+        "time": "2026-11-20 09:30",
+        "comment": "资料已核对"
+      },
+      {
+        "role": "HR 主管",
+        "name": "李明",
+        "status": "pending",
+        "time": null,
+        "comment": ""
+      }
+    ]
+  },
+  {
+    "id": "LC003",
+    "type": "transfer",
+    "status": "draft",
+    "employee_id": "EMP003",
+    "employee_name": "王芳",
+    "initiator": "李明",
+    "created_at": "2026-11-18",
+    "current_approver": "李明",
+    "data": {
+      "备注": "请核对人员资料，按流程完成审批。"
+    },
+    "steps": [
+      {
+        "role": "HR",
+        "name": "郑可欣",
+        "status": "approved",
+        "time": "2026-11-20 09:30",
+        "comment": "资料已核对"
+      },
+      {
+        "role": "HR 主管",
+        "name": "李明",
+        "status": "pending",
+        "time": null,
+        "comment": ""
+      }
+    ]
+  },
+  {
+    "id": "LC004",
+    "type": "salary_adjust",
+    "status": "pending",
+    "employee_id": "EMP004",
+    "employee_name": "陈嘉宁",
+    "initiator": "李明",
+    "created_at": "2026-11-17",
+    "current_approver": "李明",
+    "data": {
+      "备注": "请核对人员资料，按流程完成审批。"
+    },
+    "steps": [
+      {
+        "role": "HR",
+        "name": "郑可欣",
+        "status": "approved",
+        "time": "2026-11-20 09:30",
+        "comment": "资料已核对"
+      },
+      {
+        "role": "HR 主管",
+        "name": "李明",
+        "status": "pending",
+        "time": null,
+        "comment": ""
+      }
+    ]
+  },
+  {
+    "id": "LC005",
+    "type": "resign",
+    "status": "completed",
+    "employee_id": "EMP005",
+    "employee_name": "李明",
+    "initiator": "李明",
+    "created_at": "2026-11-16",
+    "current_approver": "李明",
+    "data": {
+      "备注": "请核对人员资料，按流程完成审批。"
+    },
+    "steps": [
+      {
+        "role": "HR",
+        "name": "郑可欣",
+        "status": "approved",
+        "time": "2026-11-20 09:30",
+        "comment": "资料已核对"
+      },
+      {
+        "role": "HR 主管",
+        "name": "李明",
+        "status": "approved",
+        "time": null,
+        "comment": ""
+      }
+    ]
+  },
+  {
+    "id": "LC006",
+    "type": "renew",
+    "status": "rejected",
+    "employee_id": "EMP006",
+    "employee_name": "刘雨桐",
+    "initiator": "李明",
+    "created_at": "2026-11-15",
+    "current_approver": "李明",
+    "data": {
+      "备注": "请核对人员资料，按流程完成审批。"
+    },
+    "steps": [
+      {
+        "role": "HR",
+        "name": "郑可欣",
+        "status": "approved",
+        "time": "2026-11-20 09:30",
+        "comment": "资料已核对"
+      },
+      {
+        "role": "HR 主管",
+        "name": "李明",
+        "status": "rejected",
+        "time": null,
+        "comment": ""
+      }
+    ]
+  }
+]

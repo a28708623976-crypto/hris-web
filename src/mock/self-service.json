@@ -1,0 +1,20 @@
+{
+  "current_user": {
+    "id": "EMP001",
+    "name": "林晓梅",
+    "role": "employee"
+  },
+  "my_requests": [
+    {
+      "id": "REQ001",
+      "employee_id": "EMP001",
+      "type": "leave",
+      "title": "年假申请",
+      "start_date": "2026-11-25",
+      "end_date": "2026-11-26",
+      "reason": "个人事务",
+      "status": "pending",
+      "created_at": "2026-11-20"
+    }
+  ]
+}
