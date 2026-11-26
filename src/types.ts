@@ -66,7 +66,10 @@ export type EmployeeForm = {
   contractEntity: string;
   renewalStatus: string;
 };
-export type Employee = EmployeeForm & { id: string };
+export type Employee = EmployeeForm & {
+  id: string;
+  payrollPerformance?: Pick<PerformanceRecord, "grade" | "managerComment" | "okrProgress">;
+};
 export type OnboardingTask = {
   id: string;
   candidateName: string;

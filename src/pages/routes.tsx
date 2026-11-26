@@ -154,21 +154,17 @@ export function SelfServiceModuleViewRoute() {
 export function PerformanceModuleViewRoute() {
   const {
     perfRecords,
-    triggerToast,
+    handleSyncPerformancePayroll,
     currentUser,
     isEmployeeRole,
     handleCalibrateGrade,
   } = useOutletContext<Workspace>();
   return (
     <PerformanceModuleView
+      key={isEmployeeRole ? currentUser.id : "team-performance"}
       records={perfRecords}
       onCalibrateGrade={handleCalibrateGrade}
-      onSyncPayroll={() =>
-        triggerToast(
-          "全员绩效结果已同步",
-          "校准结果已自动关联至本月算薪绩效奖金基数",
-        )
-      }
+      onSyncPayroll={handleSyncPerformancePayroll}
       isSelfOnly={isEmployeeRole}
       currentUser={currentUser}
     />

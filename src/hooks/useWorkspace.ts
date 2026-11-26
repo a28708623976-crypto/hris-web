@@ -1,3 +1,4 @@
+import { calibratePerformance, syncPerformancePayroll } from "../store/performance";
 import { renewContract, terminateRenewal } from "../store/contracts";
 import { submitSelfRequest } from "../store/selfService";
 import {
@@ -54,7 +55,6 @@ export function useWorkspace() {
     candidates,
     setCandidates,
     perfRecords,
-    setPerfRecords,
     atsRegionMode,
     setAtsRegionMode,
     atsAnonymousMode,
@@ -520,16 +520,17 @@ export function useWorkspace() {
     grade: string,
     comment: string,
   ) => {
-    setPerfRecords((prev) =>
-      prev.map((r) =>
-        r.id === empId
-          ? { ...r, grade, managerComment: comment, status: "已校准" }
-          : r,
-      ),
-    );
+    if (!calibratePerformance(empId, grade, comment)) return;
     triggerToast(
       "绩效等级校准已保存",
       `员工 ${empId} 季度校准等级已更新为 ${grade}`,
+    );
+  };
+  const handleSyncPerformancePayroll = () => {
+    if (!syncPerformancePayroll()) return;
+    triggerToast(
+      "全员绩效结果已同步",
+      "校准结果已自动关联至本月算薪绩效奖金基数",
     );
   };
   return {
@@ -556,7 +557,6 @@ export function useWorkspace() {
     candidates,
     setCandidates,
     perfRecords,
-    setPerfRecords,
     atsViewMode,
     setAtsViewMode,
     atsRegionMode,
@@ -617,6 +617,7 @@ export function useWorkspace() {
     handleUpdateCandidateStage,
     handleSubmitSelfRequest,
     handleCalibrateGrade,
+    handleSyncPerformancePayroll,
   };
 }
 export type Workspace = ReturnType<typeof useWorkspace>;

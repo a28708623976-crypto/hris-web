@@ -29,7 +29,7 @@ export function PerformanceModuleView({
   };
 
   if (isSelfOnly) {
-    const myPerf = records.find((r) => r.id === currentUser.id) || records[0];
+    const myPerf = records.find((r) => r.id === currentUser.id);
     return (
       <div className="space-y-6">
         <div>
@@ -44,7 +44,11 @@ export function PerformanceModuleView({
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-black/[0.06] space-y-5">
+        {!myPerf ? (
+          <div className="bg-white rounded-2xl p-6 border border-black/[0.06] text-sm text-[#86868B]">
+            暂无本人的绩效记录
+          </div>
+        ) : <div className="bg-white rounded-2xl p-6 border border-black/[0.06] space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="text-base font-bold text-[#1D1D1F]">
@@ -93,7 +97,7 @@ export function PerformanceModuleView({
               </p>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     );
   }
