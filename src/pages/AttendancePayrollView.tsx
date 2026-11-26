@@ -1,3 +1,4 @@
+import { employeeGross, payrollSummary } from "../utils/payroll";
 import { DollarSign, Lock, Unlock } from "lucide-react";
 import { AppleActionButton } from "../components/ui/AppleActionButton";
 import type { Workspace } from "../hooks/useWorkspace";
@@ -106,11 +107,7 @@ export function AttendancePayrollView({
     );
   }
 
-  const activeList = employees.filter((e) => e.status !== "已离职");
-  const totalGross = activeList.reduce(
-    (acc, e) => acc + (e.baseSalary || 0) + (e.perfSalary || 0),
-    0,
-  );
+  const { activeList, totalGross } = payrollSummary(employees);
 
   return (
     <div className="space-y-6">
@@ -212,7 +209,7 @@ export function AttendancePayrollView({
           </thead>
           <tbody className="divide-y divide-black/[0.04] text-xs">
             {activeList.map((emp) => {
-              const gross = (emp.baseSalary || 0) + (emp.perfSalary || 0);
+              const gross = employeeGross(emp);
               return (
                 <tr key={emp.id} className="hover:bg-[#FAFAFC]">
                   <td className="py-3.5 px-5 font-bold text-[#1D1D1F]">

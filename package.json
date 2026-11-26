@@ -14,7 +14,8 @@
     "check:employees": "node qa/employees-smoke.mjs",
     "check:workflows": "node qa/workflows-smoke.mjs",
     "check:self-service": "node qa/self-service-smoke.mjs",
-    "check:contracts": "node qa/contracts-smoke.mjs"
+    "check:contracts": "node qa/contracts-smoke.mjs",
+    "check:attendance": "node qa/attendance-smoke.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
