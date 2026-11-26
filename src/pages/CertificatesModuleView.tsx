@@ -1,3 +1,10 @@
+import {
+  certificateContent,
+  certificatePdf,
+  certificateWord,
+  downloadCertificate,
+  type CertificateType,
+} from "../utils/certificates";
 import { Download, FileText, Lock } from "lucide-react";
 import { useMemo } from "react";
 import { AppleActionButton } from "../components/ui/AppleActionButton";
@@ -17,7 +24,7 @@ export function CertificatesModuleView({
   const [selectedEmpId, setSelectedEmpId] = useState(
     employees[0]?.id || "EMP001",
   );
-  const [certType, setCertType] = useState("在职证明");
+  const [certType, setCertType] = useState<CertificateType>("在职证明");
   const [purpose, setPurpose] = useState("办理个人签证 / 居住证积分申请");
   const [resignDate, setResignDate] = useState("");
 
@@ -33,45 +40,32 @@ export function CertificatesModuleView({
   const grossMonthly =
     (targetEmp?.baseSalary || 0) + (targetEmp?.perfSalary || 0);
 
-  const handleDownloadDoc = (ext: string) => {
-    const title = certType;
-    let bodyText = "";
-    if (certType === "在职证明") {
-      bodyText = `兹证明 ${targetEmp.name}（员工工号：${targetEmp.id}），自 ${formatDateCn(
-        targetEmp.hireDate,
-      )} 起加入我司并任职于 ${targetEmp.department}，担任 ${
-        targetEmp.role
-      } 一职，当前雇佣状态为「${targetEmp.status}」。\n\n本证明仅限用于「${purpose}」，不作其他任何经济或法律担保用途。特此证明。`;
-    } else if (certType === "收入证明") {
-      bodyText = `兹证明 ${targetEmp.name}（员工工号：${targetEmp.id}），自 ${formatDateCn(
-        targetEmp.hireDate,
-      )} 起在我司 ${targetEmp.department} 担任 ${
-        targetEmp.role
-      } 一职，税前月综合收入为人民币 ¥${grossMonthly.toLocaleString()} 元。\n\n本证明仅限用于「${purpose}」，不作任何经济担保用途。特此证明。`;
-    } else {
-      bodyText = `兹证明 ${targetEmp.name}（员工工号：${targetEmp.id}），自 ${formatDateCn(
-        targetEmp.hireDate,
-      )} 起在我司任职于 ${targetEmp.department}，担任 ${targetEmp.role} 一职，于 ${formatDateCn(
-        resignDate,
-      )} 离职，双方劳动合同已解除。特此证明。`;
-    }
-
-    const content = `${title}\n\n致相关单位：\n\n${bodyText}\n\n文档编号：DOC-${targetEmp.id}-20261125\n生成日期：2026年11月25日\n（本文件为无章版标准电子证明底稿）`;
-    const mime =
-      ext === "PDF"
-        ? "application/pdf;charset=utf-8"
-        : "application/msword;charset=utf-8";
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${targetEmp.name}_${certType}_无章底稿.${ext === "PDF" ? "pdf" : "doc"}`;
-    a.click();
-    URL.revokeObjectURL(url);
-    onTriggerToast(
-      `已生成并下载 ${certType} (${ext})`,
-      `无章版标准电子文档已保存至本地`,
+  const handleDownloadDoc = async (ext: "PDF" | "Word") => {
+    if (isDownloadDisabled || !targetEmp) return;
+    const content = certificateContent(
+      targetEmp,
+      certType,
+      purpose,
+      resignDate,
+      salaryUnlocked,
     );
+    if (!content) return;
+    try {
+      const blob =
+        ext === "PDF"
+          ? await certificatePdf(content)
+          : await certificateWord(content);
+      downloadCertificate(
+        blob,
+        `${targetEmp.name}_${certType}_无章底稿.${ext === "PDF" ? "pdf" : "docx"}`,
+      );
+      onTriggerToast(
+        `已生成并下载 ${certType} (${ext})`,
+        "无章版标准电子文档已保存至本地",
+      );
+    } catch {
+      onTriggerToast("证明导出未完成", "请重试生成文件");
+    }
   };
 
   return (
@@ -118,7 +112,7 @@ export function CertificatesModuleView({
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setCertType(type)}
+                  onClick={() => setCertType(type as CertificateType)}
                   className={`py-2.5 rounded-xl font-semibold border transition-all cursor-pointer ${
                     certType === type
                       ? "bg-[#1D1D1F] text-white border-[#1D1D1F]"

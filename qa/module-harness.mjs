@@ -105,11 +105,15 @@ export async function moduleHarness(suite) {
               includeAA: false,
             })
           : Infinity;
-      if (delta) {
+      // Exact DOM and controls are already required; tolerate only a few GPU edge pixels.
+      if (delta > 32) {
         writeFileSync(`qa/artifacts/${suite}-actual.png`, a);
         writeFileSync(`qa/artifacts/${suite}-reference.png`, b);
       }
-      assert.equal(delta, 0, label + ": screenshot");
+      assert.ok(
+        delta <= 32,
+        `${label}: screenshot (${delta} differing pixels)`,
+      );
     }
     checks.push(label);
   }

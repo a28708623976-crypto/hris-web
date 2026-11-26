@@ -15,12 +15,15 @@
     "check:workflows": "node qa/workflows-smoke.mjs",
     "check:self-service": "node qa/self-service-smoke.mjs",
     "check:contracts": "node qa/contracts-smoke.mjs",
-    "check:attendance": "node qa/attendance-smoke.mjs"
+    "check:attendance": "node qa/attendance-smoke.mjs",
+    "check:certificates": "node qa/certificates-smoke.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
     "date-fns": "^4.1.0",
+    "docx": "^9.16.0",
     "lucide-react": "^0.468.0",
+    "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
