@@ -35,14 +35,38 @@ for (const role of roles) {
       !html.includes("NaN"),
       `${role} ${route} has valid numeric output`,
     );
-    assert.equal(
-      normalize(html),
-      normalize(reference),
-      `${role} ${route} must match the authoritative prototype`,
-    );
+    if (route === "/self-service") {
+      const outsideRequestForm = (markup: string) =>
+        normalize(
+          markup
+            .replace(/<form[\s\S]*?<\/form>/, "<form/>")
+            .replaceAll("假勤申请 / 年假申请", "假勤申请 / 休假申请 / 年假申请")
+            .replaceAll(
+              "资产申领 / 办公电脑 / 显示器",
+              "资产申领 / 电脑与外设 / 显示器申领",
+            )
+            .replaceAll(
+              "费用报销 / 差旅交通及住宿报销",
+              "费用报销 / 差旅费用 / 差旅报销",
+            ),
+        );
+      assert.equal(
+        outsideRequestForm(html),
+        outsideRequestForm(reference),
+        `${role} self-service outside the authorized form/path changes`,
+      );
+      assert.ok(html.includes('role="combobox"'));
+      assert.ok(html.includes("请选择最末级申请事项"));
+    } else {
+      assert.equal(
+        normalize(html),
+        normalize(reference),
+        `${role} ${route} must match the authoritative prototype`,
+      );
+    }
     count++;
   }
 }
 console.log(
-  `PASS ${count} accessible route/role combinations: markup, copy, classes and data scopes match the prototype.`,
+  `PASS ${count} accessible route/role combinations: 26 unchanged views match the full prototype; 3 self-service views preserve the shell outside the authorized form/path changes.`,
 );

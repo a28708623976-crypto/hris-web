@@ -5,3 +5,5 @@
 This stage implements the foundation only: Tailwind v4, typed component/module extraction, React Router, three prototype roles, and Zustand state. Do not add business-module features beyond the prototype.
 
 Run `npm run build`, `npm test`, `npm run check:routes`, and `npm run check:browser` after changes affecting the foundation. The browser check uses a local Vite dev server on port 5173 and an isolated headless Chrome profile. QA generates an ignored copy of the prototype; never edit the reference source to make a check pass.
+
+The self-service request form is an explicit user-approved exception to the prototype: use `src/constants/selfService.ts` for the arbitrary-depth type tree and leaf-specific form fields. Other pages remain governed by the prototype. Keep the authoritative prototype file unchanged.

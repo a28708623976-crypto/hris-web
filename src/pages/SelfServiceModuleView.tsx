@@ -1,7 +1,10 @@
 import React from "react";
 import { AppleActionButton } from "../components/ui/AppleActionButton";
-import { TwoLevelCascader } from "../components/ui/TwoLevelCascader";
-import { SELF_SERVICE_CATEGORIES } from "../constants/index";
+import { MultiLevelCascader } from "../components/ui/MultiLevelCascader";
+import { RequestFields } from "../components/ui/RequestFields";
+import type { RequestValues } from "../types";
+import { resolveRequest } from "../utils/selfService";
+import { SELF_SERVICE_REQUEST_TYPES } from "../constants/selfService";
 import { usePageState as useState } from "../store/pageState";
 export function SelfServiceModuleView({
   currentUser,
@@ -12,19 +15,19 @@ export function SelfServiceModuleView({
   requests: import("../types").SelfRequest[];
   onSubmitRequest: import("../hooks/useWorkspace").Workspace["handleSubmitSelfRequest"];
 }) {
-  const [bizType, setBizType] = useState("假勤申请 / 年假申请");
-  const [effectiveDate, setEffectiveDate] = useState("2026-12-04");
-  const [reason, setReason] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reason.trim()) return;
-    onSubmitRequest({
-      bizType,
-      effectiveDate,
-      reason,
-    });
-    setReason("");
+  const [path, setPath] = useState<string[]>([]);
+  const [values, setValues] = useState<RequestValues>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formVersion, setFormVersion] = useState(0);
+  const request = resolveRequest(path);
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const result = onSubmitRequest({ path, values });
+    setErrors(result.errors);
+    if (result.ok) {
+      setValues({});
+      setFormVersion((version) => version + 1);
+    }
   };
 
   return (
@@ -69,53 +72,53 @@ export function SelfServiceModuleView({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <form
+          noValidate
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl p-6 border border-black/[0.06] space-y-4"
         >
           <h2 className="text-sm font-bold text-[#1D1D1F]">发起申请</h2>
           <div>
             <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
-              申请业务类型（一级大类 / 二级具体事项）
+              申请业务类型
             </label>
-            <TwoLevelCascader
-              value={bizType}
-              onChange={setBizType}
-              dataMap={SELF_SERVICE_CATEGORIES}
-              placeholder="请选择申请业务类型"
+            <MultiLevelCascader
+              value={path}
+              options={SELF_SERVICE_REQUEST_TYPES}
+              onChange={(next) => {
+                setPath(next);
+                setValues({});
+                setErrors({});
+                setFormVersion((version) => version + 1);
+              }}
             />
+            {errors.typePath && (
+              <p role="alert" className="text-[11px] text-[#D70015] mt-1">
+                {errors.typePath}
+              </p>
+            )}
           </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
-              申请日期 / 生效时间
-            </label>
-            <input
-              type="date"
-              value={effectiveDate}
-              onChange={(e) => setEffectiveDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] text-xs outline-none"
+          {request ? (
+            <RequestFields
+              formKey={`${request.leaf.id}:${formVersion}`}
+              fields={request.leaf.fields!}
+              values={values}
+              errors={errors}
+              onChange={(name, value) => {
+                setValues((previous) => ({ ...previous, [name]: value }));
+                setErrors((previous) => {
+                  const next = { ...previous };
+                  delete next[name];
+                  return next;
+                });
+              }}
             />
-          </div>
+          ) : (
+            <p className="text-xs text-[#86868B]">
+              请选择最末级申请事项，填写对应申请信息。
+            </p>
+          )}
 
-          <div>
-            <label className="block text-xs font-medium text-[#6E6E73] mb-1.5">
-              申请事由 / 补充说明
-            </label>
-            <textarea
-              rows={3}
-              placeholder="请填写具体事由、金额或规格型号说明..."
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F5F7] text-xs outline-none"
-            />
-          </div>
-
-          <AppleActionButton
-            type="submit"
-            variant="primary"
-            className="w-full"
-            disabled={!reason.trim()}
-          >
+          <AppleActionButton type="submit" variant="primary" className="w-full">
             提交审批申请
           </AppleActionButton>
         </form>

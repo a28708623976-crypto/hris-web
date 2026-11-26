@@ -1,3 +1,4 @@
+import { submitSelfRequest } from "../store/selfService";
 import {
   completeOnboarding,
   approveLifecycle,
@@ -28,7 +29,7 @@ import type {
   OfferDetails,
   OnboardingTask,
   PendingMaterials,
-  SelfRequest,
+  RequestSubmission,
 } from "../types";
 import { createEmptyEmployeeForm } from "../utils/index";
 import { useWorkspaceNavigation } from "./useWorkspaceNavigation";
@@ -517,20 +518,16 @@ export function useWorkspace() {
     }
   };
 
-  const handleSubmitSelfRequest = ({
-    bizType,
-    effectiveDate,
-    reason,
-  }: Pick<SelfRequest, "bizType" | "effectiveDate" | "reason">) => {
-    const newReq = {
-      id: `REQ-${Date.now()}`,
-      bizType,
-      effectiveDate,
-      reason,
-      status: "审批中",
-    };
-    setSelfRequests((prev) => [newReq, ...prev]);
-    triggerToast("自助申请已提交", `「${bizType}」已推送至直属上级审批`);
+  const handleSubmitSelfRequest = (submission: RequestSubmission) => {
+    const result = submitSelfRequest(submission);
+    if (result.ok) {
+      const request = useStore.getState().selfRequests[0];
+      triggerToast(
+        "自助申请已提交",
+        `「${request.bizType}」已推送至直属上级审批`,
+      );
+    }
+    return result;
   };
 
   const handleCalibrateGrade = (

@@ -37,10 +37,13 @@ npm run check:routes
 npm run check:browser
 npm run check:employees
 npm run check:workflows
+npm run check:self-service
 ```
 
-`qa/` 使用只读原型生成临时验收副本，检查原型哈希、计算/数据一致性、29 组可访问角色页面的 DOM 与样式类、51 组浏览器路由角色组合、截图、Tailwind v4 实际样式和关键交互。截图与报告位于忽略提交的 `qa/artifacts/`。详情见 [验收记录](qa/VERIFICATION.md)。
+`qa/` 使用只读原型生成临时验收副本，检查原型哈希、计算/数据一致性、26 组未改动页面的完整原型 DOM 与样式类，以及 3 组员工自助授权变更范围、51 组浏览器路由角色组合、截图、Tailwind v4 实际样式和关键交互。截图与报告位于忽略提交的 `qa/artifacts/`。详情见 [验收记录](qa/VERIFICATION.md)。
 
 员工档案逐项验收见 [员工档案专项记录](qa/EMPLOYEES_VERIFICATION.md)。本人数据范围切换会重置列表临时状态，避免沿用 HR 的隐藏筛选；新增和编辑共用原型校验函数。
 
 入职与转调离逐项验收见 [流程专项记录](qa/WORKFLOWS_VERIFICATION.md)。`src/store/workflows.ts` 统一处理原型流程状态、建档防重、员工工号绑定与部门范围检查。
+
+员工自助的发起申请为明确授权的原型例外。申请类型树及 16 个末级事项的字段配置集中在 `src/constants/selfService.ts`，可继续增加任意深度的 `children`；末级节点通过 `fields` 配置字段名、标签、类型和必填规则，无需改页面。详见 [员工自助验收](qa/SELF_SERVICE_VERIFICATION.md)。

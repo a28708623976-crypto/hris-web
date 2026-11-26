@@ -1,3 +1,4 @@
+import "./self-service-state";
 import "./workflows-state";
 import { validateEmployeeForm } from "../src/utils/employees";
 import assert from "node:assert/strict";

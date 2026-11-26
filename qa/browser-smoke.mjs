@@ -91,7 +91,17 @@ try {
 
         await reference.goto(referenceUrl(role, route));
         await settle(reference);
-        await same(`${role}-${route}`);
+        if (route === "/self-service") {
+          assert.equal(
+            await app.getByRole("combobox", { name: "申请业务类型" }).count(),
+            1,
+          );
+          for (const selector of ["aside", "header"])
+            assert.equal(
+              await app.locator(selector).innerHTML(),
+              await reference.locator(selector).innerHTML(),
+            );
+        } else await same(`${role}-${route}`);
       } else {
         assert.ok(
           ["/dashboard", "/employees"].includes(new URL(app.url()).pathname),
@@ -102,13 +112,15 @@ try {
         role,
         route,
         result: canAccess(role, route)
-          ? "render + pixel parity"
+          ? route === "/self-service"
+            ? "authorized form + unchanged shell"
+            : "render + pixel parity"
           : "permission redirect",
       });
     }
   }
   console.log(
-    "PASS 51 route/role combinations, including 29 prototype-matching accessible views and 22 permission redirects.",
+    "PASS 51 route/role combinations, including 26 prototype-matching views, 3 authorized self-service forms and 22 permission redirects.",
   );
   // Actual computed values verify the Tailwind v4 utilities requested by the user.
   await app.goto(base + "/employees");
@@ -179,13 +191,17 @@ try {
   );
   await same("performance-calibration");
 
-  await open("/self-service");
-  await both((p) =>
-    p.getByRole("button", { name: "假勤申请 / 年假申请", exact: true }).click(),
+  await app.goto(base + "/self-service");
+  await app.getByRole("combobox", { name: "申请业务类型" }).click();
+  await app.getByRole("menuitem", { name: "假勤申请", exact: true }).click();
+  await app.getByRole("menuitem", { name: "休假申请", exact: true }).click();
+  await app.getByRole("menuitem", { name: "年假申请", exact: true }).click();
+  assert.ok(
+    (
+      await app.getByRole("combobox", { name: "申请业务类型" }).innerText()
+    ).includes("假勤申请 / 休假申请 / 年假申请"),
   );
-  await same("two-level-cascader");
-  await both((p) => p.getByText("资产申领", { exact: true }).hover());
-  await same("cascader-second-level");
+  assert.equal(await app.getByLabel("工作交接人").count(), 1);
   await open("/ats/progress");
   await both((p) =>
     p.getByRole("button", { name: "全局职位列表视图", exact: true }).click(),

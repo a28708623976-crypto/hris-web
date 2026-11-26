@@ -175,6 +175,9 @@ export interface Talent {
   lastActive: string;
 }
 export interface SelfRequest {
+  requestTypeId?: string;
+  typePath?: string[];
+  formValues?: RequestValues;
   id: string;
   bizType: string;
   effectiveDate: string;
@@ -226,4 +229,37 @@ export interface AppState {
   showSpotlight: boolean;
   spotlightQuery: string;
   toast: ToastMessage | null;
+}
+
+export interface CascaderOption {
+  id: string;
+  label: string;
+  children?: readonly CascaderOption[];
+}
+export type RequestFieldType =
+  "text" | "textarea" | "number" | "date" | "select" | "file";
+export interface RequestField {
+  name: string;
+  label: string;
+  type: RequestFieldType;
+  required: boolean;
+  options?: readonly string[];
+  min?: number;
+  step?: number;
+  accept?: string;
+  multiple?: boolean;
+  afterField?: string;
+}
+export type RequestTypeNode = { id: string; label: string } & (
+  | { children: readonly RequestTypeNode[]; fields?: never }
+  | { fields: readonly RequestField[]; children?: never }
+);
+export type RequestValues = Record<string, string | File[]>;
+export interface RequestSubmission {
+  path: string[];
+  values: RequestValues;
+}
+export interface RequestSubmitResult {
+  ok: boolean;
+  errors: Record<string, string>;
 }
