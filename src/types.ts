@@ -68,11 +68,15 @@ export type EmployeeForm = {
 };
 export type Employee = EmployeeForm & {
   id: string;
-  payrollPerformance?: Pick<PerformanceRecord, "grade" | "managerComment" | "okrProgress">;
+  payrollPerformance?: Pick<
+    PerformanceRecord,
+    "grade" | "managerComment" | "okrProgress"
+  >;
 };
 export type OnboardingTask = {
   id: string;
   candidateName: string;
+  candidateId?: string;
   department: string;
   role: string;
   type: string;
@@ -127,6 +131,14 @@ export type Candidate = {
   evaluation: string;
   phone?: string;
   email?: string;
+  offerSent?: boolean;
+  interviewEntered?: boolean;
+  offerDetails?: OfferDetails;
+  sourceChannel?: string;
+  appliedDate?: string;
+  acceptedDate?: string;
+  recruitingCostCny?: number;
+  recruitingCostUsd?: number;
 };
 export type PerformanceRecord = {
   id: string;

@@ -30,7 +30,7 @@ export function useAtsWorkspace(workspace: Workspace) {
     scorecardCandidate,
     setScorecardCandidate,
     offerCandidate,
-    setOfferCandidate,
+    setOfferCandidate: setRawOfferCandidate,
     talentPool,
     setTalentPool,
     triggerToast,
@@ -90,7 +90,7 @@ export function useAtsWorkspace(workspace: Workspace) {
     concerns: "",
     finalVerdict: "Strong Yes",
   });
-  const [offerForm, setOfferForm] = useState({
+  const defaultOfferForm = {
     manager: "陈嘉宁",
     startDate: "2026-12-08",
     location: "总部 · 创新研发中心",
@@ -107,7 +107,42 @@ export function useAtsWorkspace(workspace: Workspace) {
     rsuShares: 2000,
     lang: "zh",
     status: "draft", // 'draft' | 'approved' | 'sent' | 'accepted'
-  });
+  };
+  const [offerForm, setOfferForm] = useState(defaultOfferForm);
+  const [offerDrafts, setOfferDrafts] = useState<
+    Record<string, typeof defaultOfferForm>
+  >({});
+  const setOfferCandidate = (candidate: Candidate | null) => {
+    if (offerCandidate)
+      setOfferDrafts((previous) => ({
+        ...previous,
+        [offerCandidate.id]: offerForm,
+      }));
+    if (candidate) {
+      const details = candidate.offerDetails;
+      setOfferForm(
+        offerDrafts[candidate.id] ?? {
+          ...defaultOfferForm,
+          ...(details
+            ? {
+                startDate: details.startDate,
+                baseMonthly: details.baseMonthly,
+                perfMonthly: details.perfMonthly,
+                probationRatio: details.probationRatio,
+                manager: details.manager,
+              }
+            : {}),
+          status:
+            candidate.stage === "已录用转入职"
+              ? "accepted"
+              : candidate.stage === "Offer 待确认"
+                ? "sent"
+                : "draft",
+        },
+      );
+    }
+    setRawOfferCandidate(candidate);
+  };
   const isOfferLocked = offerForm.status !== "draft";
 
   return {

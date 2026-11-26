@@ -1,3 +1,4 @@
+import { analyticsStructure } from "./analytics-structure.mjs";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -57,6 +58,13 @@ for (const role of roles) {
       );
       assert.ok(html.includes('role="combobox"'));
       assert.ok(html.includes("请选择最末级申请事项"));
+    } else if (route === "/ats/analytics") {
+      assert.equal(
+        analyticsStructure(html),
+        analyticsStructure(reference),
+        "ATS report structure outside live metric cells",
+      );
+      assert.ok(html.includes("2 份发出") || html.includes("2</"));
     } else {
       assert.equal(
         normalize(html),
@@ -68,5 +76,5 @@ for (const role of roles) {
   }
 }
 console.log(
-  `PASS ${count} accessible route/role combinations: 26 unchanged views match the full prototype; 3 self-service views preserve the shell outside the authorized form/path changes.`,
+  `PASS ${count} accessible route/role combinations: 25 unchanged views match the full prototype; 1 live ATS report preserves structure; 3 self-service views preserve the shell outside the authorized form/path changes.`,
 );

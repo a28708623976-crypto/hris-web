@@ -18,7 +18,8 @@
     "check:attendance": "node qa/attendance-smoke.mjs",
     "check:certificates": "node qa/certificates-smoke.mjs",
     "check:performance": "node qa/performance-smoke.mjs",
-    "check:dashboard": "node qa/dashboard-smoke.mjs"
+    "check:dashboard": "node qa/dashboard-smoke.mjs",
+    "check:ats": "node qa/ats-smoke.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",

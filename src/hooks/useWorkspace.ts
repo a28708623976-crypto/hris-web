@@ -1,4 +1,8 @@
-import { calibratePerformance, syncPerformancePayroll } from "../store/performance";
+import { publishJob, updateCandidateStage } from "../store/recruiting";
+import {
+  calibratePerformance,
+  syncPerformancePayroll,
+} from "../store/performance";
 import { renewContract, terminateRenewal } from "../store/contracts";
 import { submitSelfRequest } from "../store/selfService";
 import {
@@ -392,115 +396,16 @@ export function useWorkspace() {
   };
 
   const handlePublishJob = (jobForm: JobForm) => {
-    const maxNum = jobs.reduce((m, j) => {
-      const n = parseInt(j.id.replace(/\D/g, ""), 10);
-      return Number.isNaN(n) ? m : Math.max(m, n);
-    }, 100);
-    const newJob = {
-      id: `JOB-${maxNum + 1}`,
-      title: jobForm.title,
-      department: jobForm.department,
-      headcount: jobForm.headcount || 1,
-      location: jobForm.location || "总部 · 现场办公",
-      salaryRange: jobForm.salaryRange || "25K - 35K · 14薪",
-      applicants: 0,
-      interviewing: 0,
-      offers: 0,
-      priority: "新发布",
-    };
-    setJobs((prev) => [newJob, ...prev]);
-    triggerToast("新招聘职位已发布上线", `「${newJob.title}」已同步至在招看板`);
+    const toast = publishJob(jobForm);
+    if (toast) triggerToast(toast.title, toast.message);
   };
-
   const handleUpdateCandidateStage = (
-    candId: string,
-    nextStage: string,
-    offerDetails: OfferDetails | null = null,
+    id: string,
+    stage: string,
+    details: OfferDetails | null = null,
   ) => {
-    const cand = candidates.find((c) => c.id === candId);
-    setCandidates((prev) =>
-      prev.map((c) => (c.id === candId ? { ...c, stage: nextStage } : c)),
-    );
-    if (cand && nextStage === "已录用转入职") {
-      const expectedDate =
-        offerDetails?.startDate ||
-        (cand.availableDate === "随时到岗" ? "2026-12-01" : cand.availableDate);
-      const baseSalary = offerDetails?.baseMonthly ?? 25000;
-      const perfSalary = offerDetails?.perfMonthly ?? 5000;
-      const probationRatio = offerDetails?.probationRatio ?? 80;
-      const manager = offerDetails?.manager || "陈嘉宁";
-      const level = offerDetails?.level || "P6";
-
-      const existingOb = onboardingTasks.find((ob) => {
-        const nameMatch = ob.candidateName === cand.name;
-        const roleMatch = ob.role === cand.jobTitle;
-        const phoneMatch =
-          cand.phone && ob.phone ? cand.phone === ob.phone : true;
-        return nameMatch && roleMatch && phoneMatch;
-      });
-
-      if (existingOb) {
-        setOnboardingTasks((prev) =>
-          prev.map((ob) =>
-            ob.id === existingOb.id
-              ? {
-                  ...ob,
-                  department: cand.department,
-                  expectedDate,
-                  baseSalary,
-                  perfSalary,
-                  probationRatio,
-                  manager,
-                  level,
-                  phone: cand.phone || ob.phone || "",
-                  email: cand.email || ob.email || "",
-                  remark: `已关联更新 Offer 定薪（基本月薪 ¥${baseSalary.toLocaleString()} + 绩效 ¥${perfSalary.toLocaleString()} · 试用期 ${probationRatio}%）。`,
-                }
-              : ob,
-          ),
-        );
-        triggerToast(
-          `已关联到现有入职单 ${existingOb.id}`,
-          `${cand.name} 的 Offer 薪资、入职日期与职级已同步更新，未重复建单`,
-        );
-      } else {
-        const newObId = `OB-2026-${String(onboardingTasks.length + 1).padStart(3, "0")}`;
-        const newOb = {
-          id: newObId,
-          candidateName: cand.name,
-          phone: cand.phone || "",
-          email: cand.email || "",
-          department: cand.department,
-          role: cand.jobTitle,
-          manager,
-          level,
-          type: "全职",
-          expectedDate,
-          baseSalary,
-          perfSalary,
-          probationRatio,
-          stage: "待核验入职材料",
-          checklist: {
-            idCard: true,
-            diploma: true,
-            resignationCert: false,
-            bankCard: false,
-            medicalReport: false,
-          },
-          remark: `由 ATS 招聘工作台录用同步转入（定薪：底薪 ¥${baseSalary.toLocaleString()} + 绩效 ¥${perfSalary.toLocaleString()} · 试用期 ${probationRatio}%）。`,
-        };
-        setOnboardingTasks((prev) => [newOb, ...prev]);
-        triggerToast(
-          `已自动转入 HRIS 入职管理（${newObId}）`,
-          `${cand.name} 的定薪、入职日期与职级已同步带入待入职列表`,
-        );
-      }
-    } else if (cand) {
-      triggerToast(
-        "候选人招聘节点已更新",
-        `${cand.name} 当前处于「${nextStage}」`,
-      );
-    }
+    const toast = updateCandidateStage(id, stage, details);
+    if (toast) triggerToast(toast.title, toast.message);
   };
 
   const handleSubmitSelfRequest = (submission: RequestSubmission) => {

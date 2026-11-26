@@ -1,3 +1,4 @@
+import { recruitingSummary } from "../../utils/recruiting";
 import { Download } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import { AppleActionButton } from "../../components/ui/AppleActionButton";
@@ -5,15 +6,15 @@ import type { AtsWorkspace } from "../../hooks/useAtsWorkspace";
 export function Analytics() {
   const { atsRegionMode, jobs, candidates, onTriggerToast } =
     useOutletContext<AtsWorkspace>();
-  const totalApplicants = jobs.reduce((sum, j) => sum + (j.applicants || 0), 0);
-  const totalInterviewing = jobs.reduce(
-    (sum, j) => sum + (j.interviewing || 0),
-    0,
-  );
-  const totalOffers = jobs.reduce((sum, j) => sum + (j.offers || 0), 0);
-  const totalHired = candidates.filter(
-    (c) => c.stage === "已录用转入职",
-  ).length;
+  const report = recruitingSummary(jobs, candidates, atsRegionMode);
+  const {
+    totalApplicants,
+    totalInterviewing,
+    totalOffers,
+    totalHired,
+    deptProgressList,
+    channelMetrics,
+  } = report;
   const funnelSteps = [
     { stage: "简历投递总计", count: totalApplicants, pct: 100, conv: "100%" },
     {
@@ -45,61 +46,6 @@ export function Analytics() {
       conv: totalOffers
         ? `${((totalHired / totalOffers) * 100).toFixed(1)}%`
         : "0%",
-    },
-  ];
-  const deptProgressList = ["技术部", "内容创作部", "视觉设计部", "运营部"].map(
-    (dept) => {
-      const deptJobs = jobs.filter((j) => j.department === dept);
-      const target = deptJobs.reduce((s, j) => s + (j.headcount || 0), 0);
-      const hired = deptJobs.reduce((s, j) => s + (j.offers || 0), 0);
-      return {
-        dept,
-        hired,
-        target,
-        avgDays:
-          dept === "技术部"
-            ? "18.2 天"
-            : dept === "内容创作部"
-              ? "13.5 天"
-              : "15.0 天",
-        bottleneck:
-          hired >= target && target > 0
-            ? "当前在招 HC 已全部锁定 Offer"
-            : "持续推进面试安排与候选人跟进",
-      };
-    },
-  );
-  const channelMetrics = [
-    {
-      channel: "员工内部推荐",
-      leads: Math.round(totalApplicants * 0.35),
-      interviewRate: "42.0%",
-      offers: Math.max(1, totalOffers),
-      avgDays: "11.5 天",
-      costPerHire: atsRegionMode === "overseas" ? "$420" : "¥ 3,000",
-      roiTag: "最高 ROI",
-    },
-    {
-      channel:
-        atsRegionMode === "overseas" ? "LinkedIn Talent" : "Boss直聘企业版",
-      leads: Math.round(totalApplicants * 0.4),
-      interviewRate: "31.5%",
-      offers: 1,
-      avgDays: "17.2 天",
-      costPerHire: atsRegionMode === "overseas" ? "$890" : "¥ 6,200",
-      roiTag: "主力渠道",
-    },
-    {
-      channel: "企业招聘官网直投",
-      leads:
-        totalApplicants -
-        Math.round(totalApplicants * 0.35) -
-        Math.round(totalApplicants * 0.4),
-      interviewRate: "25.0%",
-      offers: 0,
-      avgDays: "16.0 天",
-      costPerHire: atsRegionMode === "overseas" ? "$150" : "¥ 800",
-      roiTag: "低成本沉淀",
     },
   ];
   return (
@@ -139,37 +85,37 @@ export function Analytics() {
             平均招聘周期 (Time to Hire)
           </div>
           <div className="text-3xl font-bold text-[#1D1D1F] mt-2 tabular-nums">
-            16.5 天
+            {report.averageHireDays}
           </div>
           <div className="text-[11px] text-[#248A3D] mt-1">
-            较上季度缩短 4.2 天
+            较上季度缩短 — 天
           </div>
         </div>
         <div className="bg-white rounded-2xl p-5 border border-black/[0.06]">
           <div className="text-xs text-[#86868B]">Offer 接受率</div>
           <div className="text-3xl font-bold text-[#0071E3] mt-2 tabular-nums">
-            90.9%
+            {report.acceptanceRate}
           </div>
           <div className="text-[11px] text-[#86868B] mt-1">
-            11 份发出 · 10 份确认签署
+            {totalOffers} 份发出 · {totalHired} 份确认签署
           </div>
         </div>
         <div className="bg-white rounded-2xl p-5 border border-black/[0.06]">
           <div className="text-xs text-[#86868B]">单人平均招聘成本 (CPH)</div>
           <div className="text-3xl font-bold text-[#1D1D1F] mt-2 font-mono tabular-nums">
-            {atsRegionMode === "overseas" ? "$740" : "¥ 5,320"}
+            {report.costPerHire}
           </div>
           <div className="text-[11px] text-[#248A3D] mt-1">
-            较预算基准节约 18.4%
+            较预算基准节约 —
           </div>
         </div>
         <div className="bg-white rounded-2xl p-5 border border-black/[0.06]">
           <div className="text-xs text-[#86868B]">季度 HC 编制达成率</div>
           <div className="text-3xl font-bold text-[#248A3D] mt-2 tabular-nums">
-            83.3%
+            {report.headcountRate}
           </div>
           <div className="text-[11px] text-[#86868B] mt-1">
-            目标 12 HC · 已锁定 10 HC
+            目标 {report.target} HC · 已锁定 {totalHired} HC
           </div>
         </div>
       </div>

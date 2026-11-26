@@ -1,3 +1,4 @@
+import { analyticsStructure } from "./analytics-structure.mjs";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
 import { chromium } from "@playwright/test";
@@ -101,6 +102,17 @@ try {
               await app.locator(selector).innerHTML(),
               await reference.locator(selector).innerHTML(),
             );
+        } else if (route === "/ats/analytics") {
+          assert.equal(
+            analyticsStructure(await app.locator("#root").innerHTML()),
+            analyticsStructure(await reference.locator("#root").innerHTML()),
+            "live ATS report retains prototype structure",
+          );
+          assert.ok(
+            (await app.locator("main").innerText()).includes(
+              "2 份发出 · 0 份确认签署",
+            ),
+          );
         } else await same(`${role}-${route}`);
       } else {
         assert.ok(
@@ -114,13 +126,15 @@ try {
         result: canAccess(role, route)
           ? route === "/self-service"
             ? "authorized form + unchanged shell"
-            : "render + pixel parity"
+            : route === "/ats/analytics"
+              ? "live metrics + prototype structure"
+              : "render + pixel parity"
           : "permission redirect",
       });
     }
   }
   console.log(
-    "PASS 51 route/role combinations, including 26 prototype-matching views, 3 authorized self-service forms and 22 permission redirects.",
+    "PASS 51 route/role combinations, including 25 prototype-matching views + 1 live report, 3 authorized self-service forms and 22 permission redirects.",
   );
   // Actual computed values verify the Tailwind v4 utilities requested by the user.
   await app.goto(base + "/employees");

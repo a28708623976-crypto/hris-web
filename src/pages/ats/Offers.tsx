@@ -3,7 +3,7 @@ import { AppleActionButton } from "../../components/ui/AppleActionButton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import type { AtsWorkspace } from "../../hooks/useAtsWorkspace";
 export function Offers() {
-  const { candidates, setOfferCandidate, offerForm, setOfferForm } =
+  const { candidates, setOfferCandidate, setOfferForm } =
     useOutletContext<AtsWorkspace>();
   const offerList = candidates.filter(
     (c) =>
@@ -54,7 +54,7 @@ export function Offers() {
                   </td>
                   <td className="py-3.5 px-4 text-[#1D1D1F]">{c.jobTitle}</td>
                   <td className="py-3.5 px-4 font-mono font-semibold text-[#1D1D1F]">
-                    ¥ {offerForm.baseMonthly.toLocaleString()}
+                    ¥ {(c.offerDetails?.baseMonthly ?? 32000).toLocaleString()}
                   </td>
                   <td className="py-3.5 px-4">
                     <StatusBadge status={getOfferDisplayStatus(c.stage)} />
