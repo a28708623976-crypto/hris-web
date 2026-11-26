@@ -1,3 +1,4 @@
+import "./dashboard-state";
 import "./performance-state";
 import "./certificates-state";
 import "./attendance-state";

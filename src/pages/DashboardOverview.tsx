@@ -1,3 +1,4 @@
+import { dashboardSummary } from "../utils/dashboard";
 import { ChevronRight, Plus, Users } from "lucide-react";
 import { AppleActionButton } from "../components/ui/AppleActionButton";
 import type { Workspace } from "../hooks/useWorkspace";
@@ -21,22 +22,11 @@ export function DashboardOverview({
 }) {
   const isEmployee = role === "普通员工";
   const isHr = role === "HR 主管";
-  const activeEmps = employees.filter((e) => e.status !== "已离职");
-  const probationCount = activeEmps.filter((e) => e.status === "试用期").length;
-  const expiringCount = activeEmps.filter(
-    (e) => e.contractEnd <= "2026-12-31",
-  ).length;
-  const pendingLifecycleCount = lifecycleTasks.filter(
-    (t) => t.stage !== "已生效归档",
-  ).length;
-
-  const deptList = [
-    "内容创作部",
-    "技术部",
-    "视觉设计部",
-    "运营部",
-    "人力资源部",
-  ];
+  const {
+    activeEmps, probationCount, expiringCount, pendingLifecycleCount,
+    pendingOnboardingCount, waitingOnboardingCount, deptList,
+    attendanceCompliance, pendingAppeals, annualLeaveDays, compensatoryHours,
+  } = dashboardSummary(employees, onboardingTasks, lifecycleTasks, currentUser);
 
   return (
     <div className="space-y-6">
@@ -104,14 +94,13 @@ export function DashboardOverview({
           </div>
           <div className="text-3xl font-bold text-[#0071E3] mt-3 tabular-nums">
             {isEmployee
-              ? "8.5 天"
+              ? `${annualLeaveDays} 天`
               : `${
-                  onboardingTasks.filter((t) => t.stage !== "已完成入职建档")
-                    .length + pendingLifecycleCount
+                  pendingOnboardingCount + pendingLifecycleCount
                 } 项`}
           </div>
           <div className="text-[11px] text-[#86868B] mt-1.5">
-            {isEmployee ? "可用调休余额 12.0 小时" : "点击进入入职与转调离审批"}
+            {isEmployee ? `可用调休余额 ${compensatoryHours.toFixed(1)} 小时` : "点击进入入职与转调离审批"}
           </div>
         </div>
 
@@ -142,10 +131,10 @@ export function DashboardOverview({
             <ChevronRight className="w-4 h-4" />
           </div>
           <div className="text-3xl font-bold text-[#248A3D] mt-3 tabular-nums">
-            99.4%
+            {attendanceCompliance}%
           </div>
           <div className="text-[11px] text-[#86868B] mt-1.5">
-            全员考勤异常 0 条待申诉
+            全员考勤异常 {pendingAppeals} 条待申诉
           </div>
         </div>
       </div>
@@ -210,7 +199,7 @@ export function DashboardOverview({
                 },
                 {
                   title: "办理新员工入职核验",
-                  sub: `${onboardingTasks.length} 项待报到入职记录`,
+                  sub: `${waitingOnboardingCount} 项待报到入职记录`,
                   target: "onboarding",
                   show: isHr,
                 },
