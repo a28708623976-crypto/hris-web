@@ -80,6 +80,7 @@ export function ContractsModuleViewRoute() {
   } = useOutletContext<Workspace>();
   return (
     <ContractsModuleView
+      key={role === "HR 主管" ? "all-contracts" : currentUser.id}
       employees={
         role === "HR 主管"
           ? employees

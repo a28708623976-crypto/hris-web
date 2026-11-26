@@ -1,3 +1,4 @@
+import { renewContract, terminateRenewal } from "../store/contracts";
 import { submitSelfRequest } from "../store/selfService";
 import {
   completeOnboarding,
@@ -375,35 +376,19 @@ export function useWorkspace() {
     clauseMode: string,
     clauseNotes: string,
   ) => {
-    setEmployees((prev) =>
-      prev.map((emp) =>
-        emp.id === empId
-          ? {
-              ...emp,
-              contractEnd: newEndDate,
-              role: newRoleName || emp.role,
-              renewalStatus: "normal",
-            }
-          : emp,
-      ),
+    const toast = renewContract(
+      empId,
+      newEndDate,
+      newRoleName,
+      clauseMode,
+      clauseNotes,
     );
-    triggerToast(
-      "劳动合同电子续签已生效",
-      `合同到期日已更新至 ${newEndDate}（${
-        clauseMode === "modified" && clauseNotes
-          ? "已附补充条款"
-          : "按原条款顺延"
-      }）`,
-    );
+    if (toast) triggerToast(toast.title, toast.message);
   };
 
   const handleTerminateRenewal = (empId: string) => {
-    setEmployees((prev) =>
-      prev.map((emp) =>
-        emp.id === empId ? { ...emp, renewalStatus: "terminated" } : emp,
-      ),
-    );
-    triggerToast("已标记到期不再续签", "系统已将该合同纳入到期终止提醒清单");
+    const toast = terminateRenewal(empId);
+    if (toast) triggerToast(toast.title, toast.message);
   };
 
   const handlePublishJob = (jobForm: JobForm) => {
