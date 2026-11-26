@@ -32,6 +32,7 @@ export function DashboardOverviewRoute() {
   );
 }
 
+// Re-entering a different data scope must not retain hidden HR-only filters.
 export function EmployeesDirectoryViewRoute() {
   const {
     employees,
@@ -43,6 +44,7 @@ export function EmployeesDirectoryViewRoute() {
   } = useOutletContext<Workspace>();
   return (
     <EmployeesDirectoryView
+      key={isEmployeeRole ? currentUser.id : "directory"}
       employees={
         isEmployeeRole
           ? employees.filter((e) => e.id === currentUser.id)

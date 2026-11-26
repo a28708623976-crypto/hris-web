@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import ts from "typescript";
 
 // A generated QA-only copy lets us select the original prototype's initial view.
@@ -43,5 +43,18 @@ export function prepareReference() {
     fixture = fixture.slice(0, start) + replacement + fixture.slice(end);
   fixture +=
     "\nexport { calcAge, calcTenure, calcProbationEndDate, calcContractEndDate, addDaysToDate, createEmptyEmployeeForm, INITIAL_EMPLOYEES, INITIAL_ONBOARDING_TASKS, INITIAL_LIFECYCLE_TASKS, INITIAL_JOBS, INITIAL_CANDIDATES, INITIAL_PERF_RECORDS };\n";
-  writeFileSync("qa/.prototype-reference.tsx", fixture);
+  const validation = app.body.statements
+    .filter(ts.isVariableStatement)
+    .flatMap((statement) => [...statement.declarationList.declarations])
+    .find(
+      (declaration) => declaration.name.getText(ast) === "validateEmployeeForm",
+    );
+  fixture +=
+    "\nexport const referenceValidateEmployeeForm = " +
+    validation.initializer.getText(ast) +
+    ";\n";
+  const output = "qa/.prototype-reference.tsx";
+  if (!existsSync(output) || readFileSync(output, "utf8") !== fixture) {
+    writeFileSync(output, fixture);
+  }
 }
