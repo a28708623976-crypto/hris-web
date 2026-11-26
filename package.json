@@ -11,7 +11,8 @@
     "check:routes": "node qa/check-routes.mjs",
     "check:browser": "node qa/browser-smoke.mjs",
     "format:check": "prettier --check src qa/*.mjs qa/*.ts qa/*.tsx vite.config.ts",
-    "check:employees": "node qa/employees-smoke.mjs"
+    "check:employees": "node qa/employees-smoke.mjs",
+    "check:workflows": "node qa/workflows-smoke.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",

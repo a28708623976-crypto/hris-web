@@ -1,3 +1,9 @@
+import {
+  completeOnboarding,
+  approveLifecycle,
+  rejectLifecycle,
+  createLifecycleTask,
+} from "../store/workflows";
 import { validateEmployeeForm } from "../utils/employees";
 import {
   Award,
@@ -24,11 +30,7 @@ import type {
   PendingMaterials,
   SelfRequest,
 } from "../types";
-import {
-  calcContractEndDate,
-  calcProbationEndDate,
-  createEmptyEmployeeForm,
-} from "../utils/index";
+import { createEmptyEmployeeForm } from "../utils/index";
 import { useWorkspaceNavigation } from "./useWorkspaceNavigation";
 export function useWorkspace() {
   const state = useStore();
@@ -341,127 +343,28 @@ export function useWorkspace() {
     isPendingMaterials: boolean,
     pendingMeta: PendingMaterials | null = null,
   ) => {
-    const task = onboardingTasks.find((t) => t.id === taskId);
-    if (!task) return;
-    const pendingLabel =
-      isPendingMaterials && pendingMeta?.deadline
-        ? `材料待补 · 截止 ${pendingMeta.deadline}`
-        : "材料待补全";
-    setOnboardingTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              checklist,
-              stage: isPendingMaterials ? pendingLabel : "已完成入职建档",
-              remark:
-                isPendingMaterials && pendingMeta
-                  ? `${t.remark}（先办入职原因：${pendingMeta.reason} · 补交截止：${pendingMeta.deadline}）`
-                  : t.remark,
-            }
-          : t,
-      ),
+    const toast = completeOnboarding(
+      taskId,
+      checklist,
+      isPendingMaterials,
+      pendingMeta,
     );
-
-    const maxNum = employees.reduce((m, e) => {
-      const n = parseInt(e.id.replace(/\D/g, ""), 10);
-      return Number.isNaN(n) ? m : Math.max(m, n);
-    }, 0);
-    const nextId = `EMP${String(maxNum + 1).padStart(3, "0")}`;
-    const probRatio = (task.probationRatio || 80) / 100;
-    const newEmp = createEmptyEmployeeForm({
-      id: nextId,
-      name: task.candidateName,
-      phone: task.phone || "",
-      email: task.email || "",
-      department: task.department,
-      role: task.role,
-      manager: task.manager || "陈嘉宁",
-      level: task.level || "P5",
-      type: task.type || "全职",
-      status: "试用期",
-      hireDate: task.expectedDate,
-      contractEnd: calcContractEndDate(task.expectedDate, 3),
-      probationPeriod: "3个月",
-      probationEndDate: calcProbationEndDate(task.expectedDate, "3个月"),
-      probationBaseSalary: Math.round((task.baseSalary || 0) * probRatio),
-      probationPerfSalary: task.perfSalary || 0,
-      baseSalary: task.baseSalary || 0,
-      perfSalary: task.perfSalary || 0,
-    });
-    setEmployees((prev) => [newEmp, ...prev]);
-    triggerToast(
-      isPendingMaterials
-        ? `已办理先行入职（${pendingLabel}）`
-        : "入职材料核验通过并完成建档",
-      `${task.candidateName} 已分配工号 ${nextId} 并同步至花名册`,
-    );
+    if (toast) triggerToast(toast.title, toast.message);
   };
 
   const handleApproveLifecycle = (taskId: string) => {
-    const task = lifecycleTasks.find((t) => t.id === taskId);
-    setLifecycleTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, stage: "已生效归档" } : t)),
-    );
-    if (task) {
-      setEmployees((prev) =>
-        prev.map((emp) => {
-          if (emp.id !== task.employeeId && emp.name !== task.employeeName)
-            return emp;
-          if (task.type === "转正评估") return { ...emp, status: "正式员工" };
-          if (task.type === "离职办理") return { ...emp, status: "已离职" };
-          if (task.type === "内部调岗")
-            return { ...emp, role: task.role, department: task.department };
-          return emp;
-        }),
-      );
-      triggerToast(
-        "审批已办结并同步花名册",
-        `${task.employeeName} 的「${task.type}」已生效`,
-      );
-    }
+    const toast = approveLifecycle(taskId);
+    if (toast) triggerToast(toast.title, toast.message);
   };
 
   const handleRejectLifecycle = (taskId: string, reason: string) => {
-    setLifecycleTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              stage: "已驳回",
-              detail: `${t.detail}（驳回原因：${reason}）`,
-            }
-          : t,
-      ),
-    );
-    triggerToast("流程已驳回退回", `单号 ${taskId} 已退回发起人修改`);
+    const toast = rejectLifecycle(taskId, reason);
+    if (toast) triggerToast(toast.title, toast.message);
   };
 
   const handleCreateLifecycleTask = (form: LifecycleForm) => {
-    const maxSeq = lifecycleTasks.reduce((m, t) => {
-      const parts = t.id.split("-");
-      const n = parseInt(parts[parts.length - 1], 10);
-      return Number.isNaN(n) ? m : Math.max(m, n);
-    }, 0);
-    const newId = `LC-2026-${String(maxSeq + 1).padStart(3, "0")}`;
-    const newTask = {
-      id: newId,
-      type: form.type,
-      employeeName: form.employeeName,
-      employeeId: form.employeeId,
-      department: form.department,
-      role: form.role,
-      detail:
-        form.detail || `申请办理 ${form.employeeName} 的「${form.type}」流程。`,
-      stage: "待 HR 终审",
-      effectiveDate: form.effectiveDate,
-      approver: "李明（HR 主管）",
-    };
-    setLifecycleTasks((prev) => [newTask, ...prev]);
-    triggerToast(
-      `已发起「${form.type}」审批流`,
-      `单号 ${newId} 已推送至审批节点`,
-    );
+    const toast = createLifecycleTask(form);
+    if (toast) triggerToast(toast.title, toast.message);
   };
 
   const handleRenewContract = (

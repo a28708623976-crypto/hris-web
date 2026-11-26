@@ -33,7 +33,7 @@ export function LifecycleModuleView({
   const [taskForm, setTaskForm] = useState({
     type: "内部调岗",
     employeeName: "",
-    employeeId: "EMP002",
+    employeeId: "",
     department: currentUser.department,
     role: "",
     effectiveDate: "2026-12-01",
@@ -45,7 +45,7 @@ export function LifecycleModuleView({
       setTaskForm({
         type: prefillModal.type || "转正评估",
         employeeName: prefillModal.employeeName || "",
-        employeeId: prefillModal.employeeId || "EMP002",
+        employeeId: prefillModal.employeeId || "",
         department: prefillModal.department || currentUser.department,
         role: prefillModal.role || "",
         effectiveDate: "2026-12-01",
@@ -93,7 +93,7 @@ export function LifecycleModuleView({
             setTaskForm({
               type: isDeptLead ? "内部调岗" : "转正评估",
               employeeName: "",
-              employeeId: "EMP002",
+              employeeId: "",
               department: currentUser.department,
               role: "",
               effectiveDate: "2026-12-01",

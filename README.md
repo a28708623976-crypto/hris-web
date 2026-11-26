@@ -36,8 +36,11 @@ npm run check:routes
 # 保持 npm run dev 运行，然后：
 npm run check:browser
 npm run check:employees
+npm run check:workflows
 ```
 
 `qa/` 使用只读原型生成临时验收副本，检查原型哈希、计算/数据一致性、29 组可访问角色页面的 DOM 与样式类、51 组浏览器路由角色组合、截图、Tailwind v4 实际样式和关键交互。截图与报告位于忽略提交的 `qa/artifacts/`。详情见 [验收记录](qa/VERIFICATION.md)。
 
 员工档案逐项验收见 [员工档案专项记录](qa/EMPLOYEES_VERIFICATION.md)。本人数据范围切换会重置列表临时状态，避免沿用 HR 的隐藏筛选；新增和编辑共用原型校验函数。
+
+入职与转调离逐项验收见 [流程专项记录](qa/WORKFLOWS_VERIFICATION.md)。`src/store/workflows.ts` 统一处理原型流程状态、建档防重、员工工号绑定与部门范围检查。
