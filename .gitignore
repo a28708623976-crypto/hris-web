@@ -3,3 +3,7 @@ dist
 *.tsbuildinfo
 test-results
 playwright-report
+qa/.prototype-reference.tsx
+qa/.render-routes.cjs
+qa/artifacts/
+qa/.state-and-utils.cjs

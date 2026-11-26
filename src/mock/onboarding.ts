@@ -1,0 +1,41 @@
+import type { OnboardingTask } from "../types";
+export const INITIAL_ONBOARDING_TASKS: OnboardingTask[] = [
+  {
+    id: "OB-2026-001",
+    candidateName: "许知远",
+    department: "内容创作部",
+    role: "AI 剧本策划",
+    type: "全职",
+    expectedDate: "2026-12-01",
+    baseSalary: 20000,
+    perfSalary: 4500,
+    stage: "待核验入职材料",
+    checklist: {
+      idCard: true,
+      diploma: true,
+      resignationCert: false,
+      bankCard: true,
+      medicalReport: true,
+    },
+    remark: "前司离职证明原件将于报到当日补交，其余电子材料均已在线核验通过。",
+  },
+  {
+    id: "OB-2026-002",
+    candidateName: "宋清欢",
+    department: "技术部",
+    role: "ComfyUI 工作流研发工程师",
+    type: "全职",
+    expectedDate: "2026-12-08",
+    baseSalary: 28000,
+    perfSalary: 6000,
+    stage: "Offer 已签待建档",
+    checklist: {
+      idCard: true,
+      diploma: true,
+      resignationCert: true,
+      bankCard: true,
+      medicalReport: true,
+    },
+    remark: "五项入职前置资料已全部核验齐全，可随时办理正式建档并分配工号。",
+  },
+];

@@ -1,13 +1,229 @@
-export type Role = 'employee'|'manager'|'hr'|'hr_lead'|'boss';
-export interface Employee {id:string;name:string;department:string;position:string;status:string;hire_date:string;contract_end:string;email:string;phone:string;identity:string;emergency:string;bank:string;address:string;manager:string;location:string}
-export interface Step {role:string;name:string;status:string;time:string|null;comment:string|null}
-export interface Flow {id:string;type:string;status:string;employee_id:string;employee_name:string;initiator:string;created_at:string;current_approver:string;data:Record<string,string>;steps:Step[]}
-export interface Contract {id:string;employee_id:string;employee_name:string;type:string;start_date:string;end_date:string;sign_status:string;file_url:string|null}
-export interface Attendance {employee_id:string;employee_name:string;department:string;scheduled_days:number;actual_days:number;late_count:number;early_leave:number;leave_days:{sick:number;personal:number;annual:number};overtime_hours:number;absent_days:number}
-export interface Salary {employee_id:string;base:number;performance:number;subsidy:number;status:string}
-export interface Request {id:string;employee_id:string;type:string;title:string;start_date:string;end_date:string;reason:string;status:string;created_at:string}
-export interface Job {id:string;title:string;department:string;headcount:number;status:string;applied:number;interviewing:number;hired:number;created_at:string;description:string;requirements:string;location:string;salary_range:string}
-export interface Candidate {id:string;name:string;job_id:string;source:string;stage:string;rating:number;created_at?:string;last_updated:string;phone:string;summary:string;notes:string}
-export interface Interview {id:string;candidate_id:string;interviewer:string;round:string;time:string;mode:string;location:string;status:string}
-export interface Cycle {id:string;name:string;start:string;end:string;stage:string;score_type:string;coverage:string;headcount:number;kpi:number;attitude:number;deadlines:string[]}
-export interface Review {id:string;cycle_id:string;employee_id:string;self_score:number|null;manager_score:number|null;final_score:number|null;grade:string|null;submitted:boolean;manager_submitted?:boolean;self_metrics?:number[];manager_metrics?:number[];comment:string}
+import type { Dispatch, SetStateAction } from "react";
+export type Setter<T> = Dispatch<SetStateAction<T>>;
+export type Role = "HR 主管" | "部门负责人" | "普通员工";
+export type EmployeeForm = {
+  name: string;
+  alias: string;
+  gender: string;
+  phone: string;
+  email: string;
+  birthDate: string;
+  nationality: string;
+  ethnicity: string;
+  householdType: string;
+  householdLocation: string;
+  householdAddress: string;
+  nativePlace: string;
+  politicalStatus: string;
+  maritalStatus: string;
+  firstWorkDate: string;
+  bankCards: {
+    bankName: string;
+    branchName: string;
+    cardNumber: string;
+    holderName: string;
+    holderIdNumber: string;
+    reservedPhone: string;
+  }[];
+  idDocs: { docType: string; docNumber: string; expiryDate: string }[];
+  educations: {
+    school: string;
+    major: string;
+    degreeLevel: string;
+    studyMode: string;
+    degreeTitle: string;
+    startDate: string;
+    endDate: string;
+  }[];
+  emergencyContacts: { name: string; relation: string; phone: string }[];
+  familyMembers: {
+    name: string;
+    relation: string;
+    gender: string;
+    phone: string;
+    birthDate: string;
+  }[];
+  attachments: Record<string, string>;
+  department: string;
+  role: string;
+  manager: string;
+  type: string;
+  status: string;
+  level: string;
+  hireDate: string;
+  contractEnd: string;
+  probationPeriod: string;
+  probationEndDate: string;
+  internStartDate: string;
+  internEndDate: string;
+  internDailyRate: number;
+  partTimePayUnit: string;
+  partTimePayRate: number;
+  probationBaseSalary: number;
+  probationPerfSalary: number;
+  baseSalary: number;
+  perfSalary: number;
+  contractEntity: string;
+  renewalStatus: string;
+};
+export type Employee = EmployeeForm & { id: string };
+export type OnboardingTask = {
+  id: string;
+  candidateName: string;
+  department: string;
+  role: string;
+  type: string;
+  expectedDate: string;
+  baseSalary: number;
+  perfSalary: number;
+  stage: string;
+  checklist: Record<string, boolean>;
+  remark: string;
+  phone?: string;
+  email?: string;
+  manager?: string;
+  level?: string;
+  probationRatio?: number;
+};
+export type LifecycleTask = {
+  id: string;
+  type: string;
+  employeeName: string;
+  employeeId: string;
+  department: string;
+  role: string;
+  detail: string;
+  stage: string;
+  effectiveDate: string;
+  approver: string;
+};
+export type Job = {
+  id: string;
+  title: string;
+  department: string;
+  headcount: number;
+  location: string;
+  salaryRange: string;
+  applicants: number;
+  interviewing: number;
+  offers: number;
+  priority: string;
+};
+export type Candidate = {
+  id: string;
+  jobId: string;
+  name: string;
+  jobTitle: string;
+  department: string;
+  stage: string;
+  score: string;
+  exp: string;
+  expectedSalary: string;
+  availableDate: string;
+  interviewer: string;
+  evaluation: string;
+  phone?: string;
+  email?: string;
+};
+export type PerformanceRecord = {
+  id: string;
+  name: string;
+  department: string;
+  role: string;
+  okrProgress: number;
+  selfEval: string;
+  grade: string;
+  status: string;
+  okrSummary: string;
+  managerComment: string;
+};
+export interface ToastMessage {
+  title: string;
+  message?: string;
+}
+export interface PendingMaterials {
+  reason: string;
+  deadline: string;
+}
+export type LifecyclePrefill = Pick<
+  LifecycleTask,
+  "type" | "employeeName" | "employeeId" | "department" | "role"
+>;
+export type LifecycleForm = LifecyclePrefill & {
+  detail: string;
+  effectiveDate: string;
+};
+export type JobForm = Pick<
+  Job,
+  "title" | "department" | "headcount" | "location" | "salaryRange"
+>;
+export interface OfferDetails {
+  startDate: string;
+  baseMonthly: number;
+  perfMonthly: number;
+  probationRatio: number;
+  manager: string;
+  level: string;
+}
+export interface Talent {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  tag: string;
+  score: string;
+  lastActive: string;
+}
+export interface SelfRequest {
+  id: string;
+  bizType: string;
+  effectiveDate: string;
+  reason: string;
+  status: string;
+}
+export interface CandidateLog {
+  id: string;
+  time: string;
+  author: string;
+  role: string;
+  score?: string;
+  verdict?: string;
+  strengths?: string;
+  concerns?: string;
+  text?: string;
+  isScorecard: boolean;
+}
+export interface AppState {
+  activeApp: string;
+  showAppSwitcher: boolean;
+  activeNav: string;
+  atsActiveNav: string;
+  sidebarCollapsed: boolean;
+  role: Role;
+  employees: Employee[];
+  onboardingTasks: OnboardingTask[];
+  lifecycleTasks: LifecycleTask[];
+  jobs: Job[];
+  candidates: Candidate[];
+  perfRecords: PerformanceRecord[];
+  atsViewMode: string;
+  atsRegionMode: string;
+  atsAnonymousMode: boolean;
+  atsProgressView: string;
+  selectedAtsJobId: string;
+  activeCandidateDrawer: Candidate | null;
+  scorecardCandidate: Candidate | null;
+  offerCandidate: Candidate | null;
+  talentPool: Talent[];
+  selfRequests: SelfRequest[];
+  showNewModal: boolean;
+  newEmpForm: EmployeeForm;
+  selectedEmployee: Employee | null;
+  editEmpForm: Employee | null;
+  isEditingEmp: boolean;
+  prefillLifecycleModal: LifecyclePrefill | null;
+  salaryUnlocked: boolean;
+  showSpotlight: boolean;
+  spotlightQuery: string;
+  toast: ToastMessage | null;
+}

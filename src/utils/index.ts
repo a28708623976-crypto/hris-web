@@ -1,9 +1,166 @@
-import {differenceInCalendarDays,format,parseISO} from 'date-fns';
-export const today=()=>format(new Date(),'yyyy-MM-dd');
-export const monthNow=()=>format(new Date(),'yyyy-MM');
-export const daysLeft=(date:string)=>differenceInCalendarDays(parseISO(date),new Date());
-export const money=(v:number)=>new Intl.NumberFormat('zh-CN',{style:'currency',currency:'CNY',maximumFractionDigits:0}).format(v);
-export const uid=(prefix:string)=>`${prefix}${Date.now()}${Math.random().toString(36).slice(2,6)}`;
-export const flowNames:Record<string,string>={onboard:'入职',confirm:'转正',transfer:'调岗',salary_adjust:'调薪',resign:'离职',renew:'合同续签'};
-export const roles={employee:'员工',manager:'部门负责人',hr:'HR',hr_lead:'HR 主管',boss:'管理层'};
-export function exportCSV(name:string,rows:Record<string,unknown>[]) {if(!rows.length)return; const escape=(v:unknown)=>'"'+String(v??'').replace(/^[=+@\-\t\r]/,"'$&").replace(/"/g,'""')+'"';const keys=Object.keys(rows[0]);const text='\uFEFF'+[keys,...rows.map(r=>keys.map(k=>r[k]))].map(r=>r.map(escape).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8;'}));const a=document.createElement('a');a.href=url;a.download=name+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+import type { Employee, EmployeeForm } from "../types";
+export function calcAge(birthDate: string) {
+  if (!birthDate) return "--";
+  const b = new Date(birthDate);
+  if (Number.isNaN(b.getTime())) return "--";
+  const now = new Date("2026-11-25");
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age -= 1;
+  return age >= 0 ? `${age} 岁` : "--";
+}
+
+export function calcTenure(firstWorkDate: string) {
+  if (!firstWorkDate) return "--";
+  const start = new Date(firstWorkDate);
+  if (Number.isNaN(start.getTime())) return "--";
+  const now = new Date("2026-11-25");
+  const months =
+    (now.getFullYear() - start.getFullYear()) * 12 +
+    (now.getMonth() - start.getMonth());
+  if (months < 0) return "0 年";
+  const years = Math.floor(months / 12);
+  const remMonths = months % 12;
+  return years > 0 ? `${years} 年 ${remMonths} 个月` : `${remMonths} 个月`;
+}
+
+export function calcProbationEndDate(startDate: string, periodLabel: string) {
+  if (!startDate || !periodLabel) return "";
+  const months = parseInt(periodLabel, 10);
+  if (Number.isNaN(months)) return "";
+  const d = new Date(startDate);
+  if (Number.isNaN(d.getTime())) return "";
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString().slice(0, 10);
+}
+
+export function calcContractEndDate(startDate: string, years = 3) {
+  if (!startDate) return "";
+  const d = new Date(startDate);
+  if (Number.isNaN(d.getTime())) return "";
+  d.setFullYear(d.getFullYear() + years);
+  return d.toISOString().slice(0, 10);
+}
+
+export function addDaysToDate(dateStr: string, days: number) {
+  if (!dateStr) return "2026-12-08";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "2026-12-08";
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export function createEmptyEmployeeForm<T extends Partial<Employee>>(
+  overrides: T = {} as T,
+): EmployeeForm & T {
+  const defaultHire =
+    overrides.hireDate !== undefined ? overrides.hireDate : "2026-11-25";
+  const defaultProbPeriod =
+    overrides.probationPeriod !== undefined
+      ? overrides.probationPeriod
+      : "3个月";
+  const defaultContractEnd =
+    overrides.contractEnd !== undefined
+      ? overrides.contractEnd
+      : defaultHire
+        ? calcContractEndDate(defaultHire, 3)
+        : "";
+  const defaultProbEnd =
+    overrides.probationEndDate !== undefined
+      ? overrides.probationEndDate
+      : defaultHire
+        ? calcProbationEndDate(defaultHire, defaultProbPeriod)
+        : "";
+
+  return {
+    name: "",
+    alias: "",
+    gender: "",
+    phone: "",
+    email: "",
+    birthDate: "",
+    nationality: "中国",
+    ethnicity: "",
+    householdType: "",
+    householdLocation: "",
+    householdAddress: "",
+    nativePlace: "浙江省 / 杭州市",
+    politicalStatus: "群众",
+    maritalStatus: "",
+    firstWorkDate: "",
+    bankCards: [
+      {
+        bankName: "招商银行 (CMB)",
+        branchName: "",
+        cardNumber: "",
+        holderName: "",
+        holderIdNumber: "",
+        reservedPhone: "",
+      },
+    ],
+    idDocs: [
+      {
+        docType: "居民身份证",
+        docNumber: "",
+        expiryDate: "2035-06-15",
+      },
+    ],
+    educations: [
+      {
+        school: "",
+        major: "",
+        degreeLevel: "本科",
+        studyMode: "全日制",
+        degreeTitle: "学士",
+        startDate: "2016-09-01",
+        endDate: "2020-06-30",
+      },
+    ],
+    emergencyContacts: [
+      {
+        name: "",
+        relation: "父亲",
+        phone: "",
+      },
+    ],
+    familyMembers: [
+      {
+        name: "",
+        relation: "母亲",
+        gender: "女",
+        phone: "",
+        birthDate: "",
+      },
+    ],
+    attachments: {},
+    department: "技术部",
+    role: "",
+    manager: "陈嘉宁",
+    type: "全职",
+    status: "试用期",
+    level: "P5",
+    hireDate: defaultHire,
+    contractEnd: defaultContractEnd,
+    probationPeriod: defaultProbPeriod,
+    probationEndDate: defaultProbEnd,
+    internStartDate: "2026-11-25",
+    internEndDate: "2027-02-25",
+    internDailyRate: 300,
+    partTimePayUnit: "按天计酬 (元/天)",
+    partTimePayRate: 500,
+    probationBaseSalary: 16000,
+    probationPerfSalary: 4000,
+    baseSalary: 20000,
+    perfSalary: 5000,
+    contractEntity: "标准签约实体（默认租户）",
+    renewalStatus: "normal",
+    ...overrides,
+  };
+}
+
+export const formatDateCn = (isoStr: string) => {
+  if (!isoStr) return "（请选择离职日期）";
+  const parts = isoStr.split("-");
+  if (parts.length !== 3) return isoStr;
+  return `${parts[0]}年${Number(parts[1])}月${Number(parts[2])}日`;
+};
