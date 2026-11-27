@@ -1,3 +1,4 @@
+import { employees } from "./employees";
 import { employeeAccess } from "./permissions";
 import { Hono } from "hono";
 import { auth, requireSession } from "./auth";
@@ -19,6 +20,7 @@ app.route("/api/auth", auth);
 app.use("/api/*", requireSession);
 app.use("/api/employees", employeeAccess);
 app.use("/api/employees/*", employeeAccess);
+app.route("/api/employees", employees);
 app.all("/api/*", (c) => c.json({ error: "接口不存在" }, 404));
 app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
 app.onError((error, c) => {

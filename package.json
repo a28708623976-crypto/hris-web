@@ -22,7 +22,10 @@
     "check:ats": "node qa/ats-smoke.mjs",
     "test:worker": "tsx --test --test-concurrency=1 worker/tests/*.test.ts",
     "dev:worker": "npm run build && wrangler dev --config worker/wrangler.jsonc --local --persist-to worker/.local",
-    "db:migrate": "wrangler d1 migrations apply DB --config worker/wrangler.jsonc --local --persist-to worker/.local"
+    "db:migrate": "wrangler d1 migrations apply DB --config worker/wrangler.jsonc --local --persist-to worker/.local",
+    "local:init": "node worker/scripts/init-local.mjs",
+    "db:reset": "node worker/scripts/reset-local.mjs",
+    "db:seed": "node --import tsx worker/scripts/seed.ts && wrangler d1 execute DB --config worker/wrangler.jsonc --local --persist-to worker/.local --file worker/.local/seed.sql"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
