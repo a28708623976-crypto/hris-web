@@ -1,5 +1,5 @@
 import { Check, Sparkles, X } from "lucide-react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router";
 import { AppleActionButton } from "../../components/ui/AppleActionButton";
 import { DEPARTMENTS } from "../../constants/index";
 import type { AtsWorkspace } from "../../hooks/useAtsWorkspace";

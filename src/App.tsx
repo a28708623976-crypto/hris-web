@@ -1,6 +1,6 @@
 import { AuthBoundary } from "./components/layout/AuthBoundary";
 import { LoginPage } from "./pages/LoginPage";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router";
 import { AtsLayout } from "./components/layout/AtsLayout";
 import Layout from "./components/layout/Layout";
 import { Analytics } from "./pages/ats/Analytics";

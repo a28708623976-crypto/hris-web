@@ -7,7 +7,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { Outlet, useOutletContext } from "react-router-dom";
+import { Outlet, useOutletContext } from "react-router";
 import { useAtsWorkspace } from "../../hooks/useAtsWorkspace";
 import type { Workspace } from "../../hooks/useWorkspace";
 import { AppleActionButton } from "../ui/AppleActionButton";

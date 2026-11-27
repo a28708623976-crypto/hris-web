@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router";
 import { Mail, ShieldCheck } from "lucide-react";
 import { AppleActionButton } from "../components/ui/AppleActionButton";
 import { api, errorMessage } from "../api/client";
 import { loadSession } from "../api/session";
+import { isInternalPath } from "../utils/navigation";
 import { useAuthStore } from "../store/auth";
 export function LoginPage() {
   const [email, setEmail] = useState(""),
@@ -35,12 +36,7 @@ export function LoginPage() {
         await loadSession();
         const next = location.state?.next;
         navigate(
-          typeof next === "string" &&
-            next.startsWith("/") &&
-            !next.startsWith("//") &&
-            next !== "/login"
-            ? next
-            : "/dashboard",
+          isInternalPath(next) && next !== "/login" ? next : "/dashboard",
           { replace: true },
         );
       }

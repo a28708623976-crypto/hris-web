@@ -1,3 +1,4 @@
+import "./navigation-state";
 import "./recruiting-state";
 import "./dashboard-state";
 import "./performance-state";

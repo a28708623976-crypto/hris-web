@@ -1,4 +1,4 @@
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router";
 import { AppleActionButton } from "../../components/ui/AppleActionButton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import type { AtsWorkspace } from "../../hooks/useAtsWorkspace";

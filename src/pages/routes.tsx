@@ -1,4 +1,4 @@
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router";
 import type { Workspace } from "../hooks/useWorkspace";
 import { AttendancePayrollView } from "./AttendancePayrollView";
 import { CertificatesModuleView } from "./CertificatesModuleView";

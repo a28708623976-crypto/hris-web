@@ -1,11 +1,14 @@
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
+import { isInternalPath } from "../utils/navigation";
 import { useStore } from "../store";
 import type { Setter } from "../types";
 
 export function useWorkspaceNavigation() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
+  const routerNavigate = useNavigate();
+  const navigate = (target: string) =>
+    routerNavigate(isInternalPath(target) ? target : "/dashboard");
   const state = useStore();
   const activeApp = pathname.startsWith("/ats") ? "ats" : "hris";
   const activeNav =

@@ -158,6 +158,17 @@ export async function runBrowser(scope = "all") {
       page.on("pageerror", (error) => errors.push(error.message));
       await page.goto(base + "/employees");
       await expect(page).toHaveURL(/\/login$/);
+      // Reload with untrusted router state before submitting a real local OTP.
+      // Exercise the backslash bypass on HR; retain a valid return path for others.
+      const loginTarget = role === "HR 主管" ? "/\\evil.com" : "/employees";
+      await page.evaluate((next) => {
+        history.replaceState(
+          { ...history.state, usr: { next } },
+          "",
+          location.href,
+        );
+      }, loginTarget);
+      await page.reload();
       await page.getByLabel("工作邮箱").fill(vars[key]);
       await page
         .getByRole("button", { name: "获取验证码", exact: true })
@@ -180,6 +191,10 @@ export async function runBrowser(scope = "all") {
         .getByRole("button", { name: "验证并登录", exact: true })
         .click();
       await expect(page.locator("main h1").first()).toBeVisible();
+      await expect(page).toHaveURL(
+        base + (role === "普通员工" ? "/employees" : "/dashboard"),
+      );
+      checks.push(role + " login return path validation");
       assert.equal(await page.locator("header select").count(), 0);
       const me = await (
         await context.request.get(base + "/api/auth/me")

@@ -1,4 +1,4 @@
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router";
 import type { AtsWorkspace } from "../../hooks/useAtsWorkspace";
 export function Talent() {
   const { talentPool } = useOutletContext<AtsWorkspace>();

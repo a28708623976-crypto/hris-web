@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router";
 import { useWorkspace } from "../../hooks/useWorkspace";
 import { EmployeeDialogs } from "./EmployeeDialogs";
 import { Sidebar } from "./Sidebar";

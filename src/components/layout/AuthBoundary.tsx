@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { useAuthStore } from "../../store/auth";
 import { loadSession } from "../../api/session";
 export function AuthBoundary() {
