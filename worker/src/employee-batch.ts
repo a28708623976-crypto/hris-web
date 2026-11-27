@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import type { AppEnv } from "./env";
 import type { Employee } from "../../src/types";
-import { employeeFieldErrors } from "../../shared/employees";
+import {
+  employeeFieldErrors,
+  normaliseEmployeeDates,
+} from "../../shared/employees";
 import { encodeEmployee, type EmployeeRow } from "./employee-repository";
 import { auditStatement } from "./audit";
 export const employeeBatch = new Hono<AppEnv>();
@@ -37,7 +40,9 @@ employeeBatch.post("/batch", async (c) => {
     if (!original) return c.json({ error: "员工不存在" }, 404);
     if (record.version !== original.version)
       return c.json({ error: "档案已被更新，请重新加载后再保存" }, 409);
-    record.attachments = JSON.parse(original.public_json).attachments || {};
+    const previous = JSON.parse(original.public_json);
+    Object.assign(record, normaliseEmployeeDates(record, previous));
+    record.attachments = previous.attachments || {};
     encoded.push(await encodeEmployee(record, c.env));
   }
   const guard = crypto.randomUUID();

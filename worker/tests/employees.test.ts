@@ -286,3 +286,17 @@ test("batch updates are all-or-nothing and ordinary accounts cannot invoke them"
     403,
   );
 });
+
+test("backend recalculates derived probation and hire-date-linked contract dates", async () => {
+  const original = (await (await call("/EMP002")).json()).employee;
+  const r = await call("/EMP002", "PUT", {
+    ...original,
+    hireDate: "2027-01-31",
+    probationPeriod: "1个月",
+    probationEndDate: "2035-01-01",
+  });
+  assert.equal(r.status, 200);
+  const employee = (await r.json()).employee;
+  assert.equal(employee.probationEndDate, "2027-03-03");
+  assert.equal(employee.contractEnd, "2030-01-31");
+});

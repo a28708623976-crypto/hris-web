@@ -1,3 +1,4 @@
+import { calcContractEndDate, calcProbationEndDate } from "./dates";
 import { z } from "zod";
 import { createEmptyEmployeeForm } from "../src/utils";
 import type { EmployeeForm } from "../src/types";
@@ -149,5 +150,22 @@ export function employeeFieldErrors(value: unknown) {
       field: issue.path.join("."),
       message: issue.message,
     })),
+  };
+}
+
+export function normaliseEmployeeDates(
+  form: EmployeeForm,
+  previous?: EmployeeForm,
+): EmployeeForm {
+  return {
+    ...form,
+    probationEndDate: calcProbationEndDate(form.hireDate, form.probationPeriod),
+    contractEnd:
+      !form.contractEnd ||
+      (previous &&
+        form.hireDate !== previous.hireDate &&
+        form.contractEnd === previous.contractEnd)
+        ? calcContractEndDate(form.hireDate, 3)
+        : form.contractEnd,
   };
 }

@@ -3,7 +3,10 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { AppEnv } from "./env";
 import type { Employee, EmployeeForm } from "../../src/types";
-import { employeeFieldErrors } from "../../shared/employees";
+import {
+  employeeFieldErrors,
+  normaliseEmployeeDates,
+} from "../../shared/employees";
 import {
   calcAge,
   calcTenure,
@@ -89,14 +92,7 @@ employees.post("/", async (c) => {
     parsed = employeeFieldErrors(body);
   if (!parsed.data)
     return c.json({ error: "员工字段校验未通过", fields: parsed.errors }, 422);
-  const form = parsed.data;
-  if (!form.probationEndDate)
-    form.probationEndDate = calcProbationEndDate(
-      form.hireDate,
-      form.probationPeriod,
-    );
-  if (!form.contractEnd)
-    form.contractEnd = calcContractEndDate(form.hireDate, 3);
+  const form = normaliseEmployeeDates(parsed.data);
   const source = c.req.header("Idempotency-Key");
   if (source && source.length > 200)
     return c.json({ error: "请求标识过长" }, 400);
@@ -184,7 +180,7 @@ employees.put("/:id", async (c) => {
     return c.json({ error: "档案已被更新，请重新加载后再保存" }, 409);
   const original = JSON.parse(row.public_json);
   const employee: Employee = {
-    ...parsed.data,
+    ...normaliseEmployeeDates(parsed.data, original),
     id,
     attachments: original.attachments || {},
   };
