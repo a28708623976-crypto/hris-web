@@ -30,7 +30,7 @@
 
 ## 本地边界与邮件
 
-所有 Wrangler 脚本固定 `--local`，D1 使用占位 ID，无账号 ID，所有绑定 `remote:false`，关闭遥测，没有部署脚本。D1/R2 日常状态在 `worker/.local/`；自动验收用 `worker/.test/`，全部忽略提交。种子账号只从环境变量 `SEED_HR_EMAIL`、`SEED_DEPT_EMAIL`、`SEED_EMP_EMAIL` 读取；本地交互配置把它们保存到 `worker/.dev.vars`。原型空缺必填项只在种子里补测试值；原型附件名不是实际文件，不冒充已上传。
+本地开发与验收脚本固定 `--local`，本地 D1 使用占位 ID，无账号 ID，所有本地绑定 `remote:false`，关闭遥测。另备有独立的生产配置、离线检查和部署入口，供未来手动上线使用，详见 [生产部署手册](DEPLOY.md)；本次没有执行部署或连接线上账号。D1/R2 日常状态在 `worker/.local/`；自动验收用 `worker/.test/`，全部忽略提交。种子账号只从环境变量 `SEED_HR_EMAIL`、`SEED_DEPT_EMAIL`、`SEED_EMP_EMAIL` 读取；本地交互配置把它们保存到 `worker/.dev.vars`。原型空缺必填项只在种子里补测试值；原型附件名不是实际文件，不冒充已上传。
 
 配置默认 `ENV=production`；`npm run dev` 通过 `--var ENV:dev` 显式进入开发模式，`.dev.vars` 不再保存 ENV。只有 `ENV=dev` 且 URL hostname 为 localhost 或 127.0.0.1 才输出 Wrangler 控制台验证码；其他情况一律调用邮件绑定，不信任 Host/X-Forwarded-Host 覆盖。账号查询、验证码保存和发信统一由 `ctx.waitUntil` 执行，已开通与未开通邮箱的响应路径和内容一致，不等待邮件完成。生产分支调用 Cloudflare Email Service 的 `env.EMAIL.send({to,from,subject,text})`，要求 `EMAIL_FROM` 和邮件绑定；发送失败作废验证码，不降级输出生产验证码。生产发信域名配置和真实送达尚未联调，本阶段禁止连接线上账号。
 
