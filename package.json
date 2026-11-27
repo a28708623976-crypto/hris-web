@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && tsc -p worker/tsconfig.json && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node qa/check-state.mjs",
     "check:routes": "node qa/check-routes.mjs",
@@ -19,33 +19,42 @@
     "check:certificates": "node qa/certificates-smoke.mjs",
     "check:performance": "node qa/performance-smoke.mjs",
     "check:dashboard": "node qa/dashboard-smoke.mjs",
-    "check:ats": "node qa/ats-smoke.mjs"
+    "check:ats": "node qa/ats-smoke.mjs",
+    "test:worker": "tsx --test --test-concurrency=1 worker/tests/*.test.ts",
+    "dev:worker": "npm run build && wrangler dev --config worker/wrangler.jsonc --local --persist-to worker/.local",
+    "db:migrate": "wrangler d1 migrations apply DB --config worker/wrangler.jsonc --local --persist-to worker/.local"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
     "date-fns": "^4.1.0",
     "docx": "^9.16.0",
+    "hono": "^4.13.23",
     "lucide-react": "^0.468.0",
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
     "react-router-dom": "^6.28.0",
+    "zod": "^4.6.7",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261127.1",
     "@playwright/test": "^1.49.1",
     "@tailwindcss/vite": "^4.3.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "miniflare": "^5.20261123.1-beta",
     "pixelmatch": "^8.0.0",
     "pngjs": "^7.0.0",
     "postcss": "^8.4.49",
     "prettier": "^3.10.1",
     "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
     "typescript": "~5.6.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "wrangler": "^4.168.0"
   }
 }

@@ -7,3 +7,16 @@ qa/.prototype-reference.tsx
 qa/.render-routes.cjs
 qa/artifacts/
 qa/.state-and-utils.cjs
+
+# Local Worker bindings, private seeds, credentials and databases
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+.wrangler/
+worker/.local/
+worker/.test/
+worker/.build/
+*.sqlite
+*.sqlite-*
