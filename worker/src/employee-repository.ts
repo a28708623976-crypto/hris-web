@@ -59,3 +59,51 @@ export async function decodeEmployee(
     version: row.version,
   };
 }
+
+export function employeeSummary<
+  T extends { bankCards?: unknown; idDocs?: unknown },
+>(employee: T): Omit<T, "bankCards" | "idDocs"> {
+  const { bankCards: _bankCards, idDocs: _idDocs, ...summary } = employee;
+  return summary;
+}
+export async function decodeEmployeeSummary(
+  row: EmployeeRow,
+  env: Env,
+  user: User,
+) {
+  if (!canReadEmployee(user, row.id))
+    throw new Error("Sensitive data access denied");
+  const salary = await decrypt<Record<string, number>>(
+    row.salary_cipher,
+    env.ENCRYPTION_KEY,
+    row.id + ":salaries",
+  );
+  // Never decrypt the bank/identity columns for a list request.
+  return employeeSummary({
+    ...JSON.parse(row.public_json),
+    ...salary,
+    id: row.id,
+    version: row.version,
+  }) as Omit<Employee, "bankCards" | "idDocs"> & { version: number };
+}
+export async function employeeUpdateInput(
+  body: unknown,
+  row: EmployeeRow,
+  env: Env,
+) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  const input = { ...body } as Record<string, unknown>;
+  if (!Object.hasOwn(input, "bankCards"))
+    input.bankCards = await decrypt(
+      row.bank_cards_cipher,
+      env.ENCRYPTION_KEY,
+      row.id + ":bankCards",
+    );
+  if (!Object.hasOwn(input, "idDocs"))
+    input.idDocs = await decrypt(
+      row.id_docs_cipher,
+      env.ENCRYPTION_KEY,
+      row.id + ":idDocs",
+    );
+  return input;
+}

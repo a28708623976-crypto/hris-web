@@ -300,3 +300,68 @@ test("backend recalculates derived probation and hire-date-linked contract dates
   assert.equal(employee.probationEndDate, "2027-03-03");
   assert.equal(employee.contractEnd, "2030-01-31");
 });
+test("list omits bank/identity, retains salary and emits exactly one filter-scoped audit", async () => {
+  const before = await env.DB.prepare(
+    "SELECT count(*) AS count FROM audit_logs",
+  ).first<{ count: number }>();
+  const response = await call(
+    "?department=" +
+      encodeURIComponent("技术部") +
+      "&keyword=" +
+      encodeURIComponent("工程"),
+  );
+  assert.equal(response.status, 200);
+  const list = (await response.json()).employees;
+  assert.ok(list.length > 0);
+  for (const record of list) {
+    assert.equal(Object.hasOwn(record, "bankCards"), false);
+    assert.equal(Object.hasOwn(record, "idDocs"), false);
+    assert.equal(typeof record.baseSalary, "number");
+  }
+  const rows = await env.DB.prepare(
+    "SELECT * FROM audit_logs ORDER BY id DESC LIMIT 1",
+  ).all<{ action: string; employee_id: string | null; filters_json: string }>();
+  assert.equal(rows.results[0].action, "list");
+  assert.equal(rows.results[0].employee_id, null);
+  assert.deepEqual(JSON.parse(rows.results[0].filters_json), {
+    department: "技术部",
+    keyword: "工程",
+  });
+  assert.equal(
+    (await env.DB.prepare("SELECT count(*) AS count FROM audit_logs").first<{
+      count: number;
+    }>())!.count,
+    before!.count + 1,
+  );
+  const summary = (await (await call("?keyword=EMP001")).json()).employees[0];
+  const detailBefore = (await (await call("/EMP001")).json()).employee;
+  const saved = await call("/EMP001", "PUT", { ...summary, baseSalary: 24000 });
+  assert.equal(saved.status, 200);
+  assert.equal(
+    Object.hasOwn((await saved.json()).employee, "bankCards"),
+    false,
+  );
+  const detailAfter = (await (await call("/EMP001")).json()).employee;
+  assert.deepEqual(detailAfter.bankCards, detailBefore.bankCards);
+  assert.deepEqual(detailAfter.idDocs, detailBefore.idDocs);
+  assert.equal(
+    (await env.DB.prepare(
+      "SELECT action FROM audit_logs ORDER BY id DESC LIMIT 1",
+    ).first<{ action: string }>())!.action,
+    "read",
+  );
+  const emptyBefore = (await env.DB.prepare(
+    "SELECT count(*) AS count FROM audit_logs",
+  ).first<{ count: number }>())!.count;
+  assert.equal(
+    (await (await call("?keyword=no-matching-employee")).json()).employees
+      .length,
+    0,
+  );
+  assert.equal(
+    (await env.DB.prepare("SELECT count(*) AS count FROM audit_logs").first<{
+      count: number;
+    }>())!.count,
+    emptyBefore + 1,
+  );
+});

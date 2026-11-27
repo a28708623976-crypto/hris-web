@@ -21,3 +21,22 @@ export function auditStatement(
     "INSERT INTO audit_logs(actor_id,employee_id,action,sensitive_fields,created_at) VALUES(?,?,?,?,?)",
   ).bind(user.id, id, action, JSON.stringify(fields), Date.now());
 }
+
+export function listAuditStatement(
+  env: Env,
+  user: User,
+  filters: Record<string, string>,
+) {
+  return env.DB.prepare(
+    "INSERT INTO audit_logs(actor_id,employee_id,action,sensitive_fields,created_at,filters_json) VALUES(?,NULL,'list',?,?,?)",
+  ).bind(
+    user.id,
+    JSON.stringify(
+      sensitiveFields.filter(
+        (field) => field !== "bankCards" && field !== "idDocs",
+      ),
+    ),
+    Date.now(),
+    JSON.stringify(filters),
+  );
+}

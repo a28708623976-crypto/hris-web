@@ -5,7 +5,12 @@ import {
   employeeFieldErrors,
   normaliseEmployeeDates,
 } from "../../shared/employees";
-import { encodeEmployee, type EmployeeRow } from "./employee-repository";
+import {
+  encodeEmployee,
+  employeeUpdateInput,
+  employeeSummary,
+  type EmployeeRow,
+} from "./employee-repository";
 import { auditStatement } from "./audit";
 export const employeeBatch = new Hono<AppEnv>();
 employeeBatch.post("/batch", async (c) => {
@@ -18,7 +23,17 @@ employeeBatch.post("/batch", async (c) => {
     return c.json({ error: "批量保存需要 1 至 50 条员工记录" }, 422);
   const records: Employee[] = [];
   for (const item of body.employees) {
-    const parsed = employeeFieldErrors(item);
+    if (!item || typeof item.id !== "string")
+      return c.json({ error: "缺少员工工号" }, 422);
+    const existing = await c.env.DB.prepare(
+      "SELECT * FROM employees WHERE id=?",
+    )
+      .bind(item.id)
+      .first<EmployeeRow>();
+    if (!existing) return c.json({ error: "员工不存在" }, 404);
+    const parsed = employeeFieldErrors(
+      await employeeUpdateInput(item, existing, c.env),
+    );
     if (!parsed.data)
       return c.json(
         { error: "员工字段校验未通过", fields: parsed.errors },
@@ -93,9 +108,11 @@ employeeBatch.post("/batch", async (c) => {
     throw error;
   }
   return c.json({
-    employees: records.map((record) => ({
-      ...record,
-      version: record.version! + 1,
-    })),
+    employees: records.map((record) =>
+      employeeSummary({
+        ...record,
+        version: record.version! + 1,
+      }),
+    ),
   });
 });

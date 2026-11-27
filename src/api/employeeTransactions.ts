@@ -92,7 +92,10 @@ export async function persistEmployeeMutation(
     }
     if (useAuthStore.getState().user?.id !== actor) return false;
     const replace = new Map(
-      changed.map((employee, index) => [employee.id, saved[index]]),
+      changed.map((employee, index) => [
+        employee.id,
+        { ...employee, ...saved[index] },
+      ]),
     );
     // Current workflows either create one employee or update existing ones.
     const canonical = proposed.employees.map(

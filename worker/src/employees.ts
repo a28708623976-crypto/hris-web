@@ -15,10 +15,13 @@ import {
 } from "../../shared/dates";
 import {
   decodeEmployee,
+  decodeEmployeeSummary,
+  employeeSummary,
+  employeeUpdateInput,
   encodeEmployee,
   type EmployeeRow,
 } from "./employee-repository";
-import { auditStatement } from "./audit";
+import { auditStatement, listAuditStatement } from "./audit";
 import { keyedHash } from "./crypto";
 export const employees = new Hono<AppEnv>();
 employees.use(
@@ -29,7 +32,9 @@ employees.use(
   }),
 );
 employees.route("/", employeeBatch);
-const derived = (employee: EmployeeForm) => ({
+const derived = (
+  employee: Pick<EmployeeForm, "birthDate" | "firstWorkDate">,
+) => ({
   age: calcAge(employee.birthDate),
   tenure: calcTenure(employee.firstWorkDate),
 });
@@ -70,12 +75,17 @@ employees.get("/", async (c) => {
     .bind(...values)
     .all<EmployeeRow>();
   const result = await Promise.all(
-    rows.results.map((row) => decodeEmployee(row, c.env, user)),
+    rows.results.map((row) => decodeEmployeeSummary(row, c.env, user)),
   );
-  if (result.length)
-    await c.env.DB.batch(
-      result.map((e) => auditStatement(c.env, user, e.id, "read")),
-    );
+  const filters: Record<string, string> = {};
+  for (const [key, value] of Object.entries({
+    department,
+    status,
+    hireMonth,
+    keyword,
+  }))
+    if (value !== undefined) filters[key] = value;
+  await listAuditStatement(c.env, user, filters).run();
   return c.json({ employees: result.map((e) => ({ ...e, ...derived(e) })) });
 });
 employees.get("/:id", async (c) => {
@@ -111,7 +121,9 @@ employees.post("/", async (c) => {
         return c.json({ error: "同一请求已使用不同数据提交" }, 409);
       await auditStatement(c.env, c.get("user"), existing.id, "read").run();
       return c.json({
-        employee: await decodeEmployee(existing, c.env, c.get("user")),
+        employee: employeeSummary(
+          await decodeEmployee(existing, c.env, c.get("user")),
+        ),
       });
     }
   }
@@ -158,14 +170,22 @@ employees.post("/", async (c) => {
         if (row.source_hash !== sourceHash)
           return c.json({ error: "请求数据冲突" }, 409);
         return c.json({
-          employee: await decodeEmployee(row, c.env, c.get("user")),
+          employee: employeeSummary(
+            await decodeEmployee(row, c.env, c.get("user")),
+          ),
         });
       }
     }
     throw error;
   }
   return c.json(
-    { employee: { ...employee, version: 1, ...derived(employee) } },
+    {
+      employee: employeeSummary({
+        ...employee,
+        version: 1,
+        ...derived(employee),
+      }),
+    },
     201,
   );
 });
@@ -176,7 +196,7 @@ employees.put("/:id", async (c) => {
     .first<EmployeeRow>();
   if (!row) return c.json({ error: "员工不存在" }, 404);
   const body = await c.req.json().catch(() => null),
-    parsed = employeeFieldErrors(body);
+    parsed = employeeFieldErrors(await employeeUpdateInput(body, row, c.env));
   if (!parsed.data)
     return c.json({ error: "员工字段校验未通过", fields: parsed.errors }, 422);
   if (!Number.isInteger(body.version) || body.version !== row.version)
@@ -221,6 +241,10 @@ employees.put("/:id", async (c) => {
   if (!update[1].meta.changes)
     return c.json({ error: "档案已被更新，请重新加载后再保存" }, 409);
   return c.json({
-    employee: { ...employee, version: row.version + 1, ...derived(employee) },
+    employee: employeeSummary({
+      ...employee,
+      version: row.version + 1,
+      ...derived(employee),
+    }),
   });
 });
