@@ -111,3 +111,34 @@ test("response from logged-out account cannot repopulate private state", async (
   assert.equal(await pending, false);
   assert.deepEqual(useStore.getState().employees, []);
 });
+
+for (const success of [false, true])
+  test(`unrelated mock changes survive pending employee save (${success ? "success" : "failure"})`, async () => {
+    reset();
+    let resolve!: (response: Response) => void;
+    globalThis.fetch = () =>
+      new Promise<Response>((done) => {
+        resolve = done;
+      });
+    const before = useStore.getState();
+    const pending = persistEmployeeMutation(() =>
+      renewContract("EMP001", "2035-12-31", "", "unchanged", ""),
+    );
+    const added = { ...before.onboardingTasks[0], id: "OB-concurrent" };
+    useStore.getState().setOnboardingTasks((current) => [added, ...current]);
+    resolve(
+      success
+        ? Response.json({
+            employee: {
+              ...before.employees[0],
+              contractEnd: "2035-12-31",
+              version: 2,
+            },
+          })
+        : Response.json({ error: "失败" }, { status: 503 }),
+    );
+    assert.equal(await pending, success);
+    assert.ok(
+      useStore.getState().onboardingTasks.some((task) => task.id === added.id),
+    );
+  });

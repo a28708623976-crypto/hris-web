@@ -3,6 +3,27 @@ import { useStore } from "../store";
 import { useAuthStore } from "../store/auth";
 import { useEmployeeDraft } from "../store/employeeDraft";
 import type { Employee, ToastMessage } from "../types";
+function mergeRecords<T extends { id: string }>(
+  previous: T[],
+  next: T[],
+  current: T[],
+): T[] {
+  if (previous === next) return current;
+  const changes = new Map(
+    next
+      .filter(
+        (record) => previous.find((item) => item.id === record.id) !== record,
+      )
+      .map((record) => [record.id, record]),
+  );
+  const added = next.filter(
+    (record) => !current.some((item) => item.id === record.id),
+  );
+  return [
+    ...added,
+    ...current.map((record) => changes.get(record.id) || record),
+  ];
+}
 // Business modules remain local mock records. Their employee changes commit only
 // after the employee API succeeds; no optimistic archive survives a failed write.
 export async function persistEmployeeMutation(
@@ -83,12 +104,29 @@ export async function persistEmployeeMutation(
         created[0].id,
         saved[0].id,
       );
-    useStore.setState({ ...proposed, employees: canonical, toast: finalToast });
+    useStore.setState((current) => ({
+      employees: mergeRecords(snapshot.employees, canonical, current.employees),
+      onboardingTasks: mergeRecords(
+        snapshot.onboardingTasks,
+        proposed.onboardingTasks,
+        current.onboardingTasks,
+      ),
+      lifecycleTasks: mergeRecords(
+        snapshot.lifecycleTasks,
+        proposed.lifecycleTasks,
+        current.lifecycleTasks,
+      ),
+      perfRecords: mergeRecords(
+        snapshot.perfRecords,
+        proposed.perfRecords,
+        current.perfRecords,
+      ),
+      toast: finalToast,
+    }));
     return true;
   } catch (error) {
     if (useAuthStore.getState().user?.id === actor)
       useStore.setState({
-        ...snapshot,
         toast: { title: "保存未完成", message: errorMessage(error) },
       });
     return false;

@@ -1,3 +1,5 @@
+import { attachmentError } from "../../shared/attachments";
+import { downloadAttachment } from "../api/attachments";
 import { api, errorMessage } from "../api/client";
 import { persistEmployeeMutation } from "../api/employeeTransactions";
 import { useEmployeeDraft } from "../store/employeeDraft";
@@ -415,6 +417,79 @@ export function useWorkspace() {
     }
   };
 
+  const handleUploadEmployeeAttachment = async (
+    employeeId: string,
+    slot: string,
+    file: File,
+  ) => {
+    const validation = attachmentError(file);
+    if (validation) {
+      triggerToast("附件上传未完成", validation);
+      return;
+    }
+    if (useEmployeeDraft.getState().busy) {
+      triggerToast("正在保存", "请等待当前操作完成");
+      return;
+    }
+    const current = useStore.getState().editEmpForm;
+    if (!current || current.id !== employeeId) return;
+    const actor = useAuthStore.getState().user?.id,
+      writeId = crypto.randomUUID();
+    useEmployeeDraft.setState({ busy: true, writeId });
+    try {
+      const result = await api<{
+        attachment: { filename: string };
+        version: number;
+      }>(`/employees/${employeeId}/attachments/${slot}`, {
+        method: "POST",
+        body: file,
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+          "X-File-Name": encodeURIComponent(file.name),
+          "X-File-Size": String(file.size),
+          "If-Match": String(current.version),
+        },
+      });
+      if (useAuthStore.getState().user?.id !== actor) return;
+      const update = <T extends Employee>(employee: T): T =>
+        employee.id === employeeId
+          ? {
+              ...employee,
+              version: result.version,
+              attachments: {
+                ...employee.attachments,
+                [slot]: result.attachment.filename,
+              },
+            }
+          : employee;
+      useStore.setState((state) => ({
+        employees: state.employees.map(update),
+        selectedEmployee: state.selectedEmployee
+          ? update(state.selectedEmployee)
+          : null,
+        editEmpForm: state.editEmpForm ? update(state.editEmpForm) : null,
+      }));
+      triggerToast("附件已归档", file.name);
+    } catch (error) {
+      if (useAuthStore.getState().user?.id === actor)
+        triggerToast("附件上传未完成", errorMessage(error));
+    } finally {
+      if (useEmployeeDraft.getState().writeId === writeId)
+        useEmployeeDraft.setState({ busy: false, writeId: null });
+    }
+  };
+  const handleDownloadEmployeeAttachment = async (
+    employeeId: string,
+    slot: string,
+    filename: string,
+  ) => {
+    try {
+      await downloadAttachment(employeeId, slot, filename);
+    } catch (error) {
+      triggerToast("无法下载附件", errorMessage(error));
+    }
+  };
+
   const handleCompleteOnboarding = (
     taskId: string,
     checklist: OnboardingTask["checklist"],
@@ -588,6 +663,8 @@ export function useWorkspace() {
     handleCreateEmployee,
     handleOpenEmployeeDetail,
     handleSaveEmployeeEdit,
+    handleUploadEmployeeAttachment,
+    handleDownloadEmployeeAttachment,
     handleCompleteOnboarding,
     handleApproveLifecycle,
     handleRejectLifecycle,

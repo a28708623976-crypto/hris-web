@@ -1,3 +1,4 @@
+import { PDFDocument } from "pdf-lib";
 import { chromium, expect } from "@playwright/test";
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
@@ -292,6 +293,42 @@ export async function runBrowser(scope = "all") {
         checks.push(
           "eight tabs, edit saved through API and persists after refresh",
         );
+        const pdfDocument = await PDFDocument.create();
+        pdfDocument.addPage();
+        const fixture = Buffer.from(await pdfDocument.save());
+        await employeeRow(page, "EMP001")
+          .getByRole("button", { name: "查看详情", exact: true })
+          .click();
+        await modal(page)
+          .getByRole("button", { name: "编辑档案资料", exact: true })
+          .click();
+        await tab(page, "资料附件");
+        await modal(page).locator('input[type="file"]').first().setInputFiles({
+          name: "浏览器测试.pdf",
+          mimeType: "application/pdf",
+          buffer: fixture,
+        });
+        const attachmentButton = modal(page).getByRole("button", {
+          name: "已归档：浏览器测试.pdf",
+          exact: true,
+        });
+        await expect(attachmentButton).toBeVisible();
+        const downloaded = page.waitForEvent("download");
+        await attachmentButton.click();
+        const download = await downloaded;
+        assert.equal(download.suggestedFilename(), "浏览器测试.pdf");
+        await download.saveAs("qa/artifacts/backend-attachment.pdf");
+        assert.deepEqual(
+          readFileSync("qa/artifacts/backend-attachment.pdf"),
+          fixture,
+        );
+        await modal(page)
+          .getByRole("button", { name: "关闭", exact: true })
+          .click();
+        checks.push(
+          "attachment is uploaded to private R2 and authenticated browser download matches bytes",
+        );
+
         // A real API error must retain edits and leave canonical employee data unchanged.
         await employeeRow(page, "EMP001")
           .getByRole("button", { name: "查看详情", exact: true })

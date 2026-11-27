@@ -6,6 +6,8 @@ import type { Env } from "../src/env";
 const vars = {
   ...parseEnv(readFileSync("worker/.dev.vars", "utf8")),
   ...process.env,
+  ENCRYPTION_KEY: parseEnv(readFileSync("worker/.dev.vars", "utf8"))
+    .ENCRYPTION_KEY,
 };
 const emails = ["SEED_HR_EMAIL", "SEED_DEPT_EMAIL", "SEED_EMP_EMAIL"].map(
   (key) => {

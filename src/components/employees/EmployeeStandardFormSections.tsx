@@ -24,10 +24,18 @@ export function EmployeeStandardFormSections<T extends EmployeeForm>({
   form,
   setForm,
   readOnly = false,
+  employeeId,
+  uploading = false,
+  onUploadAttachment,
+  onDownloadAttachment,
 }: {
   form: T;
   setForm: (update: (previous: T) => T) => void;
   readOnly?: boolean;
+  employeeId?: string;
+  uploading?: boolean;
+  onUploadAttachment?: (slot: string, file: File) => Promise<void>;
+  onDownloadAttachment?: (slot: string, filename: string) => Promise<void>;
 }) {
   const [activeTab, setActiveTab] = useState("personal");
 
@@ -1097,6 +1105,11 @@ export function EmployeeStandardFormSections<T extends EmployeeForm>({
               资料附件（支持 JPEG / JPG / PNG / PDF / DOC / DOCX，单文件 ≤
               50MB）
             </h4>
+            {!employeeId && (
+              <p className="text-xs text-[#86868B]">
+                建档后可在员工详情上传附件。
+              </p>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {ATTACHMENT_SLOTS.map((slot) => {
                 const uploadedFile = form.attachments?.[slot.key];
@@ -1117,9 +1130,22 @@ export function EmployeeStandardFormSections<T extends EmployeeForm>({
                         )}
                       </div>
                       <div className="text-[11px] text-[#86868B] truncate mt-0.5">
-                        {uploadedFile
-                          ? `已归档：${uploadedFile}`
-                          : "暂未上传附件"}
+                        {uploadedFile && employeeId ? (
+                          <button
+                            type="button"
+                            className="text-[#0071E3] hover:underline text-left"
+                            onClick={() =>
+                              void onDownloadAttachment?.(
+                                slot.key,
+                                uploadedFile,
+                              )
+                            }
+                          >
+                            已归档：{uploadedFile}
+                          </button>
+                        ) : (
+                          "暂未上传附件"
+                        )}
                       </div>
                     </div>
                     {!readOnly && (
@@ -1128,13 +1154,16 @@ export function EmployeeStandardFormSections<T extends EmployeeForm>({
                         <input
                           type="file"
                           className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) {
-                              updateField("attachments", {
-                                ...(form.attachments || {}),
-                                [slot.key]: f.name,
-                              });
+                          accept=".jpeg,.jpg,.png,.pdf,.doc,.docx"
+                          disabled={!employeeId || uploading}
+                          onChange={async (event) => {
+                            const input = event.currentTarget;
+                            const file = input.files?.[0];
+                            try {
+                              if (file && onUploadAttachment)
+                                await onUploadAttachment(slot.key, file);
+                            } finally {
+                              input.value = "";
                             }
                           }}
                         />

@@ -1,49 +1,72 @@
 # PeopleOS · HRIS Pro
 
-视觉、布局、交互和文案的唯一基准是 [高保真原型](prototype/peopleos_hris_pro.tsx)。该文件保留原样。旧版《HRIS Web App 前端 Spec.md》仅作历史参考；本阶段只迁移底座和原型已有功能。
+本阶段已实现本地后端：邮箱验证码登录、三角色权限、加密员工档案和私有附件。一个 Cloudflare Worker 同时提供前端页面和 `/api/*`，使用 Hono、本地 D1、本地 R2。没有部署或创建线上资源。
 
-React 18 + TypeScript strict + Tailwind CSS v4（官方 Vite 插件）+ lucide-react + React Router 6 + Zustand 5。
+视觉基准仍为 [只读原型](prototype/peopleos_hris_pro.tsx)，员工自助多级表单保留此前授权的例外。合同、考勤、绩效、ATS 等没有新增业务后端；其中涉及员工变更的动作会调用员工接口，其余业务记录继续使用 mock。
 
-```sh
-npm install
-npm run dev
-```
+## 第一次在本机启动
 
-默认进入 `/employees`。开发服务器地址为 http://127.0.0.1:5173。
+1. 打开 Mac「终端」，复制这一行后按回车：
 
-- `src/constants/`：部门、字典、省市、银行、编制选项等常量。
-- `src/utils/`：原型的日期、年龄、工龄、试用期、合同及空白表单辅助函数；保留原型的固定基准日期和计算规则。
-- `src/mock/`：员工、入职、转调离、职位、候选人、绩效、人才库、自助申请和候选人活动初始数据。
-- `src/types.ts`：业务实体、表单、角色、状态和 Setter 基础类型。
-- `src/store/`：共享业务数据及框架状态；页面和表单的临时状态也放在 Zustand，组件卸载时按原型重置。无 localStorage 持久化，刷新恢复初始数据。
-- `src/hooks/`：路由导航适配，以及保留原型业务处理逻辑的 HRIS / ATS 上下文。
-- `src/components/ui/`：AppleActionButton、StatusBadge、TwoLevelCascader。
-- `src/components/layout/`：Sidebar、TopBar（子应用/视角切换与搜索入口）、Spotlight、Toast、弹窗和共享框架。
-- `src/pages/`：HRIS 模块；`src/pages/ats/` 为 ATS 各独立页面。原型保留的旧版 RecruitingModuleView 仍保留其组件代码，但原型未挂载此组件，导航使用完整 ATS 工作台。
+   ```sh
+   cd "/Users/acheng/Documents/Codex/HRIS Web"
+   ```
 
-HRIS 独立路由：`/dashboard`、`/employees`、`/onboarding`、`/lifecycle`、`/contracts`、`/attendance`、`/certificates`、`/self-service`、`/performance`。
+2. 安装依赖（本机已安装过也可以执行）：
 
-ATS 独立路由：`/ats/home`、`/ats/jobs`、`/ats/jobs/new`、`/ats/progress`、`/ats/candidates`、`/ats/talent`、`/ats/offers`、`/ats/analytics`。
+   ```sh
+   npm install
+   ```
 
-三角色完全依照原型：HR 主管可访问全部页面；部门负责人可访问工作台、转调离、本人合同、考勤薪资、员工自助和绩效；普通员工可访问本人工作台、档案、合同、考勤、自助和绩效。身份映射同原型：部门负责人 EMP004，其他视角 EMP005。数据过滤、薪资锁和操作按钮按原型保留。URL 直达受相同导航规则约束；浏览器前进、后退和刷新可用。
+3. 配置三个测试账号：
 
-模拟审批、招聘、下载等行为沿用原型，本次未扩展成真实后端服务。证明文件下载的原型行为也保持原样。
+   ```sh
+   npm run local:accounts
+   ```
+
+   终端会依次询问 HR 主管、部门负责人、普通员工的测试邮箱。每填一个按一次回车，三者使用不同邮箱。配置和随机密钥只保存在忽略提交的 `worker/.dev.vars` 中；更换账号时保留现有加密密钥。
+
+4. 初始化本地测试数据：
+
+   ```sh
+   npm run db:reset
+   ```
+
+   这一步会清空**本地测试 D1**，写入原型的 12 名测试员工和三个账号。已有本地修改会被清除，日常启动不必重复执行。员工附件索引也随员工删除；不会操作线上数据库或桶。
+
+5. 启动本地网站：
+
+   ```sh
+   npm run dev
+   ```
+
+   等待终端出现 `Ready` 或本地地址。保持这个终端窗口运行，在浏览器打开 **http://localhost:8787**。`npm run dev:worker` 是相同的启动方式。若 8787 被占用，以终端实际显示的本地地址为准。
+
+   本地验收使用 Chrome，建议也用 Chrome 打开上述地址。
+
+6. 登录：输入第 3 步设置的任一邮箱，点击「获取验证码」。回到正在运行服务的终端，找到 `[DEV login]` 行，把 `code=` 后面的六位数字复制到网页，点击「验证并登录」。**本地不发送真实邮件**，无需检查收件箱。只有已配置账号会打印验证码；同一邮箱一分钟只能申请一次。
+
+7. 测试员工权限：HR 主管账号可以新增/编辑；普通员工只看到自己的档案和薪资；部门负责人没有员工档案菜单，员工 API 全部返回 403。使用右上角「退出登录」后，可以换另一个账号测试。
+
+8. 测试附件：先保存员工档案，再打开详情 → 编辑档案资料 → 资料附件。支持 JPEG/JPG/PNG/PDF/DOC/DOCX、单文件至多 50MB；点击已归档文件名会经鉴权下载。普通员工可以下载本人附件，不能上传或修改。
+
+以后启动只需要第 1、5、6 步。停止服务：回到终端按 **Control+C**。不要删除或随意更换 `worker/.dev.vars` 中的加密密钥，否则旧密文无法读取；本地测试库确需重新开始时再执行第 4 步。
+
+## 测试与记录
 
 ```sh
 npm run build
 npm test
+npm run test:worker
 npm run check:routes
-# 保持 npm run dev 运行，然后：
 npm run check:browser
-npm run check:employees
-npm run check:workflows
-npm run check:self-service
+npm run check:private
 ```
 
-`qa/` 使用只读原型生成临时验收副本，检查原型哈希、计算/数据一致性、26 组未改动页面的完整原型 DOM 与样式类，以及 3 组员工自助授权变更范围、51 组浏览器路由角色组合、截图、Tailwind v4 实际样式和关键交互。截图与报告位于忽略提交的 `qa/artifacts/`。详情见 [验收记录](qa/VERIFICATION.md)。
+浏览器脚本自行启动独立的本地 Worker/D1/R2 测试实例，无需另外运行 Vite；测试数据库在忽略目录 `worker/.test/`，不会重置日常开发用的 `worker/.local/`。需要本机 Chrome；检查脚本使用单独的浏览器配置。
 
-员工档案逐项验收见 [员工档案专项记录](qa/EMPLOYEES_VERIFICATION.md)。本人数据范围切换会重置列表临时状态，避免沿用 HR 的隐藏筛选；新增和编辑共用原型校验函数。
+- [本阶段完整验收](qa/backend/VERIFICATION.md)
+- [Worker 接口、存储和安全说明](worker/README.md)
+- [历史前端原型验收索引](qa/VERIFICATION.md)
 
-入职与转调离逐项验收见 [流程专项记录](qa/WORKFLOWS_VERIFICATION.md)。`src/store/workflows.ts` 统一处理原型流程状态、建档防重、员工工号绑定与部门范围检查。
-
-员工自助的发起申请为明确授权的原型例外。申请类型树及 16 个末级事项的字段配置集中在 `src/constants/selfService.ts`，可继续增加任意深度的 `children`；末级节点通过 `fields` 配置字段名、标签、类型和必填规则，无需改页面。详见 [员工自助验收](qa/SELF_SERVICE_VERIFICATION.md)。
+`shared/` 保存前后端共用的 Zod 校验、日期与附件规则。`worker/migrations/` 管理 D1 结构，`worker/scripts/` 提供固定使用 `--local` 的初始化脚本。项目没有部署脚本，请勿执行 Wrangler login、deploy、资源 create 或 `--remote` 命令。

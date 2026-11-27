@@ -21,5 +21,12 @@
       "remote": false,
     },
   ],
+  "r2_buckets": [
+    {
+      "binding": "ATTACHMENTS",
+      "bucket_name": "peopleos-attachments-local",
+      "remote": false,
+    },
+  ],
   "send_email": [{ "name": "EMAIL", "remote": false }],
 }

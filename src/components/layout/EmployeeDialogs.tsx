@@ -22,6 +22,8 @@ export function EmployeeDialogs({ workspace }: { workspace: Workspace }) {
     setPrefillLifecycleModal,
     handleCreateEmployee,
     handleSaveEmployeeEdit,
+    handleUploadEmployeeAttachment,
+    handleDownloadEmployeeAttachment,
   } = workspace;
   return (
     <>
@@ -114,6 +116,18 @@ export function EmployeeDialogs({ workspace }: { workspace: Workspace }) {
                 setEditEmpForm((previous) => previous && update(previous))
               }
               readOnly={!isEditingEmp}
+              employeeId={selectedEmployee.id}
+              uploading={busy}
+              onUploadAttachment={(slot, file) =>
+                handleUploadEmployeeAttachment(selectedEmployee.id, slot, file)
+              }
+              onDownloadAttachment={(slot, filename) =>
+                handleDownloadEmployeeAttachment(
+                  selectedEmployee.id,
+                  slot,
+                  filename,
+                )
+              }
             />
 
             <div className="px-6 py-4 bg-[#FAFAFC] border-t border-black/[0.06] flex flex-wrap items-center justify-between gap-2">

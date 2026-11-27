@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { app } from "../src/index";
-import { hash, keyedHash } from "../src/crypto";
+import { hash, keyedHash, randomToken } from "../src/crypto";
 import type { Env } from "../src/env";
 const email =
   process.env.SEED_HR_EMAIL || `auth-${crypto.randomUUID()}@example.invalid`;
@@ -143,7 +143,7 @@ test("production must call EMAIL and never log code; failed send invalidates cod
     log += String(v);
   };
   env.ENV = "production";
-  env.EMAIL_FROM = process.env.EMAIL_FROM || "sender@example.invalid";
+  env.EMAIL_FROM = process.env.EMAIL_FROM || randomToken() + "@example.invalid";
   env.EMAIL = {
     send: async (message) => {
       assert.equal(message.to, email);

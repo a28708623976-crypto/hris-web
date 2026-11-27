@@ -19,7 +19,7 @@ import {
   type EmployeeRow,
 } from "./employee-repository";
 import { auditStatement } from "./audit";
-import { hash } from "./crypto";
+import { keyedHash } from "./crypto";
 export const employees = new Hono<AppEnv>();
 employees.use(
   "*",
@@ -96,7 +96,10 @@ employees.post("/", async (c) => {
   const source = c.req.header("Idempotency-Key");
   if (source && source.length > 200)
     return c.json({ error: "请求标识过长" }, 400);
-  const sourceHash = await hash(JSON.stringify(form));
+  const sourceHash = await keyedHash(
+    c.env.AUTH_SECRET,
+    "employee-create:" + JSON.stringify(form),
+  );
   if (source) {
     const existing = await c.env.DB.prepare(
       "SELECT * FROM employees WHERE source_key=?",

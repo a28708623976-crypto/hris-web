@@ -6,6 +6,7 @@ export interface User {
 }
 export interface Env {
   DB: D1Database;
+  ATTACHMENTS: R2Bucket;
   ASSETS: Fetcher;
   ENV: string;
   AUTH_SECRET: string;
