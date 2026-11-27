@@ -1,3 +1,4 @@
+import { assertCanAccessEmployee, assertHrLead } from "./permissions";
 import { Hono } from "hono";
 import type { AppEnv } from "./env";
 import { ATTACHMENT_SLOTS } from "../../src/constants";
@@ -33,6 +34,8 @@ function validMagic(ext: string, bytes: Uint8Array) {
 attachments.post("/:id/attachments/:slot", async (c) => {
   const id = c.req.param("id"),
     slot = c.req.param("slot");
+  assertCanAccessEmployee(c.get("user"), id);
+  assertHrLead(c.get("user"));
   if (!ATTACHMENT_SLOTS.some((item) => item.key === slot))
     return c.json({ error: "附件类别无效" }, 400);
   const employee = await c.env.DB.prepare(
@@ -236,6 +239,7 @@ attachments.post("/:id/attachments/:slot", async (c) => {
 attachments.get("/:id/attachments/:slot", async (c) => {
   const id = c.req.param("id"),
     slot = c.req.param("slot");
+  assertCanAccessEmployee(c.get("user"), id);
   const attachment = await c.env.DB.prepare(
     "SELECT * FROM attachments WHERE employee_id=? AND slot=?",
   )

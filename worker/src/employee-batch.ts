@@ -1,3 +1,4 @@
+import { assertCanAccessEmployee, assertHrLead } from "./permissions";
 import { Hono } from "hono";
 import type { AppEnv } from "./env";
 import type { Employee } from "../../src/types";
@@ -14,6 +15,7 @@ import {
 import { auditStatement } from "./audit";
 export const employeeBatch = new Hono<AppEnv>();
 employeeBatch.post("/batch", async (c) => {
+  assertHrLead(c.get("user"));
   const body = await c.req.json().catch(() => null);
   if (
     !Array.isArray(body?.employees) ||
@@ -25,6 +27,7 @@ employeeBatch.post("/batch", async (c) => {
   for (const item of body.employees) {
     if (!item || typeof item.id !== "string")
       return c.json({ error: "缺少员工工号" }, 422);
+    assertCanAccessEmployee(c.get("user"), item.id);
     const existing = await c.env.DB.prepare(
       "SELECT * FROM employees WHERE id=?",
     )

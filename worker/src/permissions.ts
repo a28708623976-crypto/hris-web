@@ -1,3 +1,4 @@
+import { HTTPException } from "hono/http-exception";
 import { createMiddleware } from "hono/factory";
 import type { AppEnv, User } from "./env";
 export function canReadEmployee(user: User, employeeId: string) {
@@ -5,6 +6,21 @@ export function canReadEmployee(user: User, employeeId: string) {
     user.role === "hr_lead" ||
     (user.role === "employee" && user.employee_id === employeeId)
   );
+}
+export function assertCanAccessEmployee(
+  user: User | undefined,
+  employeeId: string,
+): asserts user is User {
+  if (!user) throw new HTTPException(401, { message: "请先登录" });
+  if (!/^EMP\d{3,}$/.test(employeeId))
+    throw new HTTPException(404, { message: "员工不存在" });
+  if (!canReadEmployee(user, employeeId))
+    throw new HTTPException(403, { message: "无员工档案权限" });
+}
+export function assertHrLead(user: User | undefined): asserts user is User {
+  if (!user) throw new HTTPException(401, { message: "请先登录" });
+  if (user.role !== "hr_lead")
+    throw new HTTPException(403, { message: "无员工档案修改权限" });
 }
 export const employeeAccess = createMiddleware<AppEnv>(async (c, next) => {
   const user = c.get("user");

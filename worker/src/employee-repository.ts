@@ -1,7 +1,7 @@
 import type { Employee } from "../../src/types";
 import type { Env, User } from "./env";
 import { decrypt, encrypt } from "./encryption";
-import { canReadEmployee } from "./permissions";
+import { assertCanAccessEmployee } from "./permissions";
 export const salaryFields = [
   "internDailyRate",
   "partTimePayRate",
@@ -39,8 +39,7 @@ export async function decodeEmployee(
   env: Env,
   user: User,
 ): Promise<Employee & { version: number }> {
-  if (!canReadEmployee(user, row.id))
-    throw new Error("Sensitive data access denied");
+  assertCanAccessEmployee(user, row.id);
   const [bankCards, idDocs, salary] = await Promise.all([
     decrypt(row.bank_cards_cipher, env.ENCRYPTION_KEY, row.id + ":bankCards"),
     decrypt<Employee["idDocs"]>(
@@ -71,8 +70,7 @@ export async function decodeEmployeeSummary(
   env: Env,
   user: User,
 ) {
-  if (!canReadEmployee(user, row.id))
-    throw new Error("Sensitive data access denied");
+  assertCanAccessEmployee(user, row.id);
   const salary = await decrypt<Record<string, number>>(
     row.salary_cipher,
     env.ENCRYPTION_KEY,

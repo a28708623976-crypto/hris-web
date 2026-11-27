@@ -365,3 +365,88 @@ test("list omits bank/identity, retains salary and emits exactly one filter-scop
     emptyBefore + 1,
   );
 });
+test("handler authorization works without the path middleware", async () => {
+  const { Hono } = await import("hono");
+  const { HTTPException } = await import("hono/http-exception");
+  const { employees } = await import("../src/employees");
+  const { attachments } = await import("../src/attachments");
+  const direct = new Hono<import("../src/env").AppEnv>();
+  direct.use("*", async (c, next) => {
+    c.set("user", {
+      id: "employee",
+      email: "",
+      role: "employee",
+      employee_id: "EMP001",
+    });
+    await next();
+  });
+  direct.route("/api/employees", attachments);
+  direct.route("/api/employees", employees);
+  direct.onError((error, c) =>
+    error instanceof HTTPException
+      ? c.json({ error: error.message }, error.status)
+      : c.json({ error: "unexpected" }, 500),
+  );
+  for (const [method, path] of [
+    ["GET", "/EMP002"],
+    ["PUT", "/EMP002"],
+    ["PUT", "/EMP001"],
+    ["POST", "/EMP002/attachments/idFront"],
+    ["POST", "/EMP001/attachments/idFront"],
+    ["GET", "/EMP002/attachments/idFront"],
+    ["POST", "/batch"],
+  ] as const) {
+    const r = await direct.request(
+      "https://local.test/api/employees" + path,
+      {
+        method,
+        body: method === "GET" ? undefined : "{}",
+        headers: { "content-type": "application/json" },
+      },
+      env,
+    );
+    assert.equal(r.status, 403, method + " " + path);
+    assert.ok(!(await r.text()).includes("baseSalary"));
+  }
+  assert.equal(
+    (await direct.request("https://local.test/api/employees/EMP001", {}, env))
+      .status,
+    200,
+  );
+});
+test("abnormal employee paths cannot access another employee", async () => {
+  const variants = [
+    "/api/employees//EMP002",
+    "//api/employees/EMP002",
+    "/api/employees/EMP001/%2e%2e/EMP002",
+    "/api/employees/%2e/EMP002",
+    "/api/employees/%252e/EMP002",
+    "/API/employees/EMP002",
+    "/api/Employees/EMP002",
+    "/api/employees/emp002",
+    "/api/employees/EMP002/",
+    "/api/employees/EMP002/attachments/idFront/",
+    "/api/employees/%45MP002",
+    "/api/employees/EMP001%2f..%2fEMP002",
+  ];
+  for (const path of variants)
+    for (const method of ["GET", "PUT", "POST"]) {
+      const r = await app.request(
+        "https://local.test" + path,
+        {
+          method,
+          headers: {
+            cookie: cookies.employee,
+            "content-type": "application/json",
+          },
+          ...(method === "GET" ? {} : { body: "{}" }),
+        },
+        env,
+      );
+      assert.ok(
+        [403, 404].includes(r.status),
+        `${method} ${path}: ${r.status}`,
+      );
+      assert.ok(!(await r.text()).includes("baseSalary"));
+    }
+});

@@ -1,3 +1,4 @@
+import { assertCanAccessEmployee, assertHrLead } from "./permissions";
 import { employeeBatch } from "./employee-batch";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
@@ -42,6 +43,7 @@ employees.get("/", async (c) => {
   const conditions: string[] = [],
     values: (string | number)[] = [];
   const user = c.get("user");
+  assertCanAccessEmployee(user, user.employee_id);
   if (user.role === "employee") {
     conditions.push("id=?");
     values.push(user.employee_id);
@@ -89,6 +91,7 @@ employees.get("/", async (c) => {
   return c.json({ employees: result.map((e) => ({ ...e, ...derived(e) })) });
 });
 employees.get("/:id", async (c) => {
+  assertCanAccessEmployee(c.get("user"), c.req.param("id"));
   const row = await c.env.DB.prepare("SELECT * FROM employees WHERE id=?")
     .bind(c.req.param("id"))
     .first<EmployeeRow>();
@@ -98,6 +101,7 @@ employees.get("/:id", async (c) => {
   return c.json({ employee: { ...employee, ...derived(employee) } });
 });
 employees.post("/", async (c) => {
+  assertHrLead(c.get("user"));
   const body = await c.req.json().catch(() => null),
     parsed = employeeFieldErrors(body);
   if (!parsed.data)
@@ -191,6 +195,8 @@ employees.post("/", async (c) => {
 });
 employees.put("/:id", async (c) => {
   const id = c.req.param("id");
+  assertCanAccessEmployee(c.get("user"), id);
+  assertHrLead(c.get("user"));
   const row = await c.env.DB.prepare("SELECT * FROM employees WHERE id=?")
     .bind(id)
     .first<EmployeeRow>();
