@@ -60,47 +60,55 @@ auth.post("/request-code", async (c) => {
     .run();
   if (!rate.meta.changes)
     return c.json({ error: "请求过于频繁，请稍后重试" }, 429);
-  const user = await c.env.DB.prepare(
-    "SELECT id FROM users WHERE email=? AND active=1",
-  )
-    .bind(email)
-    .first();
-  if (user) {
-    const code = newCode(),
-      nonce = randomToken();
-    const codeHash = await keyedHash(
-      c.env.AUTH_SECRET,
-      `${emailHash}:${nonce}:${code}`,
-    );
-    await c.env.DB.prepare(
-      `INSERT INTO auth_codes(email_hash,code_hash,nonce,expires_at) VALUES(?,?,?,?)
-      ON CONFLICT(email_hash) DO UPDATE SET code_hash=excluded.code_hash,nonce=excluded.nonce,expires_at=excluded.expires_at,attempts=0,used_at=NULL`,
-    )
-      .bind(emailHash, codeHash, nonce, now + 600000)
-      .run();
-    if (c.env.ENV === "dev")
-      console.log(`[DEV login] ${email} code=${code} (10 minutes)`);
-    else {
-      try {
-        if (!c.env.EMAIL_FROM || !c.env.EMAIL)
-          throw new Error("Email Service not configured");
-        await c.env.EMAIL.send({
-          to: email,
-          from: c.env.EMAIL_FROM,
-          subject: "PeopleOS 登录验证码",
-          text: `您的验证码是 ${code}，10 分钟内有效。请勿向他人透露。`,
-        });
-      } catch {
+  // Keep the foreground path identical: account lookup, code storage and mail
+  // all run after scheduling for both existing and unknown addresses.
+  c.executionCtx.waitUntil(
+    (async () => {
+      const user = await c.env.DB.prepare(
+        "SELECT id FROM users WHERE email=? AND active=1",
+      )
+        .bind(email)
+        .first();
+      if (user) {
+        const code = newCode(),
+          nonce = randomToken();
+        const codeHash = await keyedHash(
+          c.env.AUTH_SECRET,
+          `${emailHash}:${nonce}:${code}`,
+        );
         await c.env.DB.prepare(
-          "UPDATE auth_codes SET used_at=? WHERE email_hash=? AND nonce=?",
+          `INSERT INTO auth_codes(email_hash,code_hash,nonce,expires_at) VALUES(?,?,?,?)
+      ON CONFLICT(email_hash) DO UPDATE SET code_hash=excluded.code_hash,nonce=excluded.nonce,expires_at=excluded.expires_at,attempts=0,used_at=NULL`,
         )
-          .bind(Date.now(), emailHash, nonce)
+          .bind(emailHash, codeHash, nonce, now + 600000)
           .run();
-        // Keep the same response for existing and unknown users. Never log a production code/address.
-        console.error("Email Service delivery failed");
+        if (c.env.ENV === "dev")
+          console.log(`[DEV login] ${email} code=${code} (10 minutes)`);
+        else {
+          try {
+            if (!c.env.EMAIL_FROM || !c.env.EMAIL)
+              throw new Error("Email Service not configured");
+            await c.env.EMAIL.send({
+              to: email,
+              from: c.env.EMAIL_FROM,
+              subject: "PeopleOS 登录验证码",
+              text: `您的验证码是 ${code}，10 分钟内有效。请勿向他人透露。`,
+            });
+          } catch {
+            await c.env.DB.prepare(
+              "UPDATE auth_codes SET used_at=? WHERE email_hash=? AND nonce=?",
+            )
+              .bind(Date.now(), emailHash, nonce)
+              .run();
+            // Keep the same response for existing and unknown users. Never log a production code/address.
+            console.error("Email Service delivery failed");
+          }
+        }
       }
-    }
-  }
+    })().catch(() => {
+      console.error("Authentication delivery task failed");
+    }),
+  );
   return c.json(success);
 });
 auth.post("/verify", async (c) => {

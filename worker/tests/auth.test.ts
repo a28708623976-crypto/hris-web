@@ -33,19 +33,33 @@ before(async () => {
     .run();
 });
 after(() => mf.dispose());
-const call = (path: string, body?: unknown, cookie?: string) =>
-  app.request(
-    "https://local.test/api" + path,
-    {
-      method: body === undefined ? "GET" : "POST",
-      headers: {
-        "content-type": "application/json",
-        ...(cookie ? { cookie } : {}),
-      },
-      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+const call = (path: string, body?: unknown, cookie?: string) => {
+  const tasks: Promise<unknown>[] = [];
+  const context = {
+    waitUntil(task: Promise<unknown>) {
+      tasks.push(task);
     },
-    env,
-  );
+    passThroughOnException() {},
+    props: {},
+  };
+  return (async () => {
+    const response = await app.request(
+      "https://local.test/api" + path,
+      {
+        method: body === undefined ? "GET" : "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(cookie ? { cookie } : {}),
+        },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      },
+      env,
+      context,
+    );
+    await Promise.all(tasks);
+    return response;
+  })();
+};
 async function code() {
   await env.DB.exec("DELETE FROM auth_rate_events");
   let value = "";
@@ -218,6 +232,78 @@ test("production delivery failure never returns a code or leaves it valid", asyn
     );
   } finally {
     console.error = old;
+    env.ENV = "dev";
+  }
+});
+
+test("known and unknown request-code responses do not wait for mail delivery", async () => {
+  await env.DB.exec("DELETE FROM auth_rate_events");
+  let release!: (value: unknown) => void,
+    started!: () => void,
+    delivered = false,
+    sends = 0;
+  const startedPromise = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const delivery = new Promise((resolve) => {
+    release = resolve;
+  });
+  env.ENV = "production";
+  env.EMAIL_FROM = randomToken() + "@example.invalid";
+  env.EMAIL = {
+    send: async () => {
+      sends++;
+      started();
+      await delivery;
+      delivered = true;
+    },
+  };
+  const tasks: Promise<unknown>[] = [];
+  const context = {
+    waitUntil(task: Promise<unknown>) {
+      tasks.push(task);
+    },
+    passThroughOnException() {},
+    props: {},
+  };
+  const request = (address: string) =>
+    app.request(
+      "https://local.test/api/auth/request-code",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: address }),
+      },
+      env,
+      context,
+    );
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const responses = await Promise.race([
+      Promise.all([
+        request(email),
+        request(randomToken() + "@example.invalid"),
+      ]),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("response waited for pending mail")),
+          3000,
+        );
+      }),
+    ]);
+    assert.deepEqual(
+      responses.map((response) => response.status),
+      [200, 200],
+    );
+    assert.deepEqual(await responses[0].json(), await responses[1].json());
+    assert.equal(tasks.length, 2);
+    await startedPromise;
+    assert.equal(delivered, false);
+    assert.equal(sends, 1);
+  } finally {
+    if (timer) clearTimeout(timer);
+    release(undefined);
+    await Promise.all(tasks);
     env.ENV = "dev";
   }
 });
