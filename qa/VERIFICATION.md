@@ -1,5 +1,7 @@
 # PeopleOS 验收索引
 
+最新：[后端加固六项验收](hardening/VERIFICATION.md)。前端界面保持原样。
+
 当前阶段见 [本地后端完整验收](backend/VERIFICATION.md)：真实邮箱验证码登录、权限、加密员工档案、私有 R2 附件及本地运行步骤已完成。前端浏览器脚本已更新为自行启动隔离的本地 Worker、真实登录三账号，不再使用视角下拉框。
 
 - [本地后端验收](backend/VERIFICATION.md)
