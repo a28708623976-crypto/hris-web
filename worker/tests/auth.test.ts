@@ -60,7 +60,7 @@ const call = (path: string, body?: unknown, cookie?: string) => {
     return response;
   })();
 };
-async function code() {
+async function code(address = email) {
   await env.DB.exec("DELETE FROM auth_rate_events");
   let value = "";
   const log = console.log;
@@ -68,7 +68,10 @@ async function code() {
     value = String(line).match(/code=(\d{6})/)?.[1] || value;
   };
   try {
-    assert.equal((await call("/auth/request-code", { email })).status, 200);
+    assert.equal(
+      (await call("/auth/request-code", { email: address })).status,
+      200,
+    );
   } finally {
     console.log = log;
   }
@@ -114,7 +117,7 @@ test("expiry, fifth failure and one use", async () => {
   assert.match(cookie, /HttpOnly/i);
   assert.match(cookie, /Secure/);
   assert.match(cookie, /SameSite=Lax/);
-  assert.match(cookie, /Max-Age=604800/);
+  assert.match(cookie, /Max-Age=86400/);
   assert.equal((await call("/auth/verify", { email, code: c })).status, 400);
   const session = await env.DB.prepare(
     "SELECT token_hash FROM sessions",
@@ -306,4 +309,81 @@ test("known and unknown request-code responses do not wait for mail delivery", a
     await Promise.all(tasks);
     env.ENV = "dev";
   }
+});
+
+test("session cookie and stored expiry are 24h for HR and 7d for other roles", async () => {
+  for (const role of ["hr_lead", "dept_head", "employee"] as const) {
+    const address =
+      role === "hr_lead" ? email : randomToken() + "@example.invalid";
+    if (role !== "hr_lead")
+      await env.DB.prepare("INSERT INTO users VALUES(?,?,?,?,1)")
+        .bind(role, address, role, role === "employee" ? "EMP001" : "EMP004")
+        .run();
+    const value = await code(address);
+    const response = await call("/auth/verify", {
+      email: address,
+      code: value,
+    });
+    assert.equal(response.status, 200);
+    const cookie = response.headers.get("set-cookie")!;
+    const seconds = role === "hr_lead" ? 86400 : 604800;
+    assert.ok(cookie.includes("Max-Age=" + seconds));
+    const token = cookie.match(/=([^;]+)/)![1];
+    const row = await env.DB.prepare(
+      "SELECT created_at,expires_at FROM sessions WHERE token_hash=?",
+    )
+      .bind(await hash(token))
+      .first<{ created_at: number; expires_at: number }>();
+    assert.equal(row!.expires_at - row!.created_at, seconds * 1000);
+  }
+});
+test("pre-existing long HR sessions are capped at 24h without affecting 7d users", async () => {
+  for (const [id, status] of [
+    ["u-hr", 401],
+    ["employee", 200],
+  ] as const) {
+    const token = randomToken();
+    await env.DB.prepare("INSERT INTO sessions VALUES(?,?,?,?)")
+      .bind(
+        await hash(token),
+        id,
+        Date.now() - 25 * 3600000,
+        Date.now() + 6 * 86400000,
+      )
+      .run();
+    assert.equal(
+      (await call("/auth/me", undefined, "__Host-peopleos=" + token)).status,
+      status,
+    );
+  }
+});
+test("logout-all revokes every current-user device and leaves another user's sessions", async () => {
+  const tokens = [randomToken(), randomToken(), randomToken()];
+  for (const [i, token] of tokens.entries())
+    await env.DB.prepare("INSERT INTO sessions VALUES(?,?,?,?)")
+      .bind(
+        await hash(token),
+        i === 2 ? "employee" : "u-hr",
+        Date.now(),
+        Date.now() + 86400000,
+      )
+      .run();
+  const cookies = tokens.map((token) => "__Host-peopleos=" + token);
+  const response = await call(
+    "/auth/logout-all",
+    { user_id: "employee" },
+    cookies[0],
+  );
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("set-cookie")!, /Max-Age=0/);
+  assert.equal(
+    (await env.DB.prepare(
+      "SELECT count(*) AS count FROM sessions WHERE user_id='u-hr'",
+    ).first<{ count: number }>())!.count,
+    0,
+  );
+  assert.equal((await call("/auth/me", undefined, cookies[0])).status, 401);
+  assert.equal((await call("/auth/me", undefined, cookies[1])).status, 401);
+  assert.equal((await call("/auth/me", undefined, cookies[2])).status, 200);
+  assert.equal((await call("/auth/logout-all", {})).status, 401);
 });

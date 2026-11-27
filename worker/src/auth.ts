@@ -5,6 +5,11 @@ import { z } from "zod";
 import type { AppEnv, User } from "./env";
 import { hash, keyedHash, newCode, randomToken } from "./crypto";
 export const COOKIE = "__Host-peopleos";
+export const SESSION_SECONDS = {
+  hr_lead: 86400,
+  dept_head: 604800,
+  employee: 604800,
+} as const;
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
 const success = {
   success: true,
@@ -15,10 +20,17 @@ export const requireSession = createMiddleware<AppEnv>(async (c, next) => {
   if (!token || !/^[a-f0-9]{64}$/.test(token))
     return c.json({ error: "请先登录" }, 401);
   const tokenHash = await hash(token);
+  const now = Date.now();
   const user = await c.env.DB.prepare(
-    `SELECT u.id,u.email,u.role,u.employee_id FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.active=1`,
+    `SELECT u.id,u.email,u.role,u.employee_id FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND s.created_at + CASE WHEN u.role='hr_lead' THEN ? ELSE ? END > ? AND u.active=1`,
   )
-    .bind(tokenHash, Date.now())
+    .bind(
+      tokenHash,
+      now,
+      SESSION_SECONDS.hr_lead * 1000,
+      SESSION_SECONDS.employee * 1000,
+      now,
+    )
     .first<User>();
   if (!user) return c.json({ error: "登录已过期，请重新登录" }, 401);
   c.set("user", user);
@@ -139,23 +151,24 @@ auth.post("/verify", async (c) => {
   if (!result || result.code_hash !== codeHash || !/^\d{6}$/.test(body.code))
     return c.json({ error: "验证码无效或已过期" }, 400);
   const user = await c.env.DB.prepare(
-    "SELECT id FROM users WHERE email=? AND active=1",
+    "SELECT id,role FROM users WHERE email=? AND active=1",
   )
     .bind(email.data)
-    .first<{ id: string }>();
+    .first<{ id: string; role: User["role"] }>();
   if (!user) return c.json({ error: "验证码无效或已过期" }, 400);
   const token = randomToken();
+  const lifetime = SESSION_SECONDS[user.role];
   await c.env.DB.prepare(
     "INSERT INTO sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)",
   )
-    .bind(await hash(token), user.id, now, now + 7 * 86400000)
+    .bind(await hash(token), user.id, now, now + lifetime * 1000)
     .run();
   setCookie(c, COOKIE, token, {
     httpOnly: true,
     secure: true,
     sameSite: "Lax",
     path: "/",
-    maxAge: 7 * 86400,
+    maxAge: lifetime,
   });
   return c.json({ success: true });
 });
@@ -164,6 +177,19 @@ auth.get("/me", (c) => c.json({ user: c.get("user") }));
 auth.post("/logout", async (c) => {
   await c.env.DB.prepare("DELETE FROM sessions WHERE token_hash=?")
     .bind(c.get("tokenHash"))
+    .run();
+  deleteCookie(c, COOKIE, {
+    path: "/",
+    secure: true,
+    httpOnly: true,
+    sameSite: "Lax",
+  });
+  return c.json({ success: true });
+});
+
+auth.post("/logout-all", async (c) => {
+  await c.env.DB.prepare("DELETE FROM sessions WHERE user_id=?")
+    .bind(c.get("user").id)
     .run();
   deleteCookie(c, COOKIE, {
     path: "/",
