@@ -27,7 +27,9 @@
     "db:reset": "node worker/scripts/reset-local.mjs",
     "db:seed": "node --import tsx worker/scripts/seed.ts && wrangler d1 execute DB --config worker/wrangler.jsonc --local --persist-to worker/.local --file worker/.local/seed.sql",
     "local:accounts": "node worker/scripts/init-local.mjs --accounts",
-    "check:private": "node worker/scripts/check-private.mjs"
+    "check:private": "node worker/scripts/check-private.mjs",
+    "deploy:check": "npm run build && node worker/scripts/deploy-check.mjs",
+    "deploy": "npm run deploy:check -- --strict && wrangler deploy --config worker/wrangler.production.jsonc"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
