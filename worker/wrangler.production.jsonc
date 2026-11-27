@@ -1,0 +1,34 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "peopleos-hris",
+  "send_metrics": false,
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-26",
+  "workers_dev": false,
+  "vars": {
+    "ENV": "production",
+    "EMAIL_FROM": "login@REPLACE_WITH_DOMAIN",
+  },
+  "assets": {
+    "directory": "../dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "routes": [{ "pattern": "REPLACE_WITH_DOMAIN", "custom_domain": true }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "peopleos-hris",
+      "database_id": "REPLACE_WITH_D1_ID",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ATTACHMENTS",
+      "bucket_name": "peopleos-hris-attachments",
+    },
+  ],
+  "send_email": [{ "name": "EMAIL" }],
+}
