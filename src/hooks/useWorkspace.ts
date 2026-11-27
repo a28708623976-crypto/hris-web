@@ -1,3 +1,7 @@
+import { api, errorMessage } from "../api/client";
+import { persistEmployeeMutation } from "../api/employeeTransactions";
+import { useEmployeeDraft } from "../store/employeeDraft";
+import { useAuthStore } from "../store/auth";
 import { publishJob, updateCandidateStage } from "../store/recruiting";
 import {
   calibratePerformance,
@@ -126,12 +130,24 @@ export function useWorkspace() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    if (!showNewModal)
+      useEmployeeDraft.setState({ onboarding: null, creationKey: null });
+  }, [showNewModal]);
+  const authUser = useAuthStore((state) => state.user);
   const currentUser = useMemo(() => {
-    if (role === "部门负责人") {
-      return employees.find((e) => e.id === "EMP004") || employees[0]; // 陈嘉宁 · 运营部负责人
-    }
-    return employees.find((e) => e.id === "EMP005") || employees[0]; // 李明
-  }, [role, employees]);
+    return (
+      employees.find((employee) => employee.id === authUser?.employee_id) ||
+      employees.find(
+        (employee) =>
+          employee.id === (role === "部门负责人" ? "EMP004" : "EMP005"),
+      ) ||
+      createEmptyEmployeeForm({
+        id: authUser?.employee_id || "",
+        name: "当前用户",
+      })
+    );
+  }, [role, employees, authUser?.employee_id]);
 
   const isEmployeeRole = role === "普通员工";
 
@@ -294,74 +310,142 @@ export function useWorkspace() {
     );
   };
 
-  const handleCreateEmployee = () => {
-    const err = validateEmployeeForm(newEmpForm);
-    if (err) {
-      triggerToast("表单校验未通过", err);
+  const handleCreateEmployee = async () => {
+    const form = useStore.getState().newEmpForm;
+    const error = validateEmployeeForm(form);
+    if (error) {
+      triggerToast("表单校验未通过", error);
       return;
     }
-    const maxNum = employees.reduce((m, e) => {
-      const n = parseInt(e.id.replace(/\D/g, ""), 10);
-      return Number.isNaN(n) ? m : Math.max(m, n);
-    }, 0);
-    const nextId = `EMP${String(maxNum + 1).padStart(3, "0")}`;
-    const created = {
-      ...newEmpForm,
-      id: nextId,
-      status: newEmpForm.type === "全职" ? "试用期" : "正式员工",
-    };
-    setEmployees((prev) => [created, ...prev]);
-    setShowNewModal(false);
-    setNewEmpForm(createEmptyEmployeeForm());
-    triggerToast(
-      `新员工 ${created.name}（${nextId}）建档成功`,
-      "已同步写入花名册、合同台账与算薪引擎",
-    );
+    const draft = useEmployeeDraft.getState();
+    const key = draft.creationKey || crypto.randomUUID();
+    useEmployeeDraft.setState({ creationKey: key });
+    const ok = await persistEmployeeMutation(() => {
+      const state = useStore.getState();
+      const temporaryId = "EMP_PENDING";
+      let notice = {
+        title: `新员工 ${form.name} 建档成功`,
+        message: "已同步保存员工档案",
+      };
+      let onboarding: Employee["onboarding"];
+      if (draft.onboarding) {
+        const context = draft.onboarding;
+        const result = completeOnboarding(
+          context.taskId,
+          context.checklist,
+          context.pending,
+          context.meta,
+        );
+        if (!result) return null;
+        notice = {
+          title: result.title,
+          message: `${form.name} 已分配工号 EMP_PENDING 并同步至花名册`,
+        };
+        const next = useStore.getState();
+        onboarding = {
+          taskId: context.taskId,
+          stage: next.onboardingTasks.find(
+            (task) => task.id === context.taskId,
+          )!.stage,
+        };
+      }
+      useStore.setState({
+        employees: [
+          {
+            ...form,
+            id: temporaryId,
+            status: form.type === "全职" ? "试用期" : "正式员工",
+            ...(onboarding ? { onboarding } : {}),
+          },
+          ...state.employees,
+        ],
+      });
+      return notice;
+    }, key);
+    if (ok) {
+      setShowNewModal(false);
+      setNewEmpForm(createEmptyEmployeeForm());
+      useEmployeeDraft.setState({ onboarding: null, creationKey: null });
+    }
   };
 
-  const handleOpenEmployeeDetail = (emp: Employee) => {
-    setSelectedEmployee(emp);
-    setEditEmpForm(JSON.parse(JSON.stringify(emp)));
-    setIsEditingEmp(false);
+  const handleOpenEmployeeDetail = async (emp: Employee) => {
+    const actor = useAuthStore.getState().user?.id;
+    try {
+      const { employee } = await api<{ employee: Employee }>(
+        "/employees/" + emp.id,
+      );
+      if (useAuthStore.getState().user?.id !== actor) return;
+      setSelectedEmployee(employee);
+      setEditEmpForm(structuredClone(employee));
+      setIsEditingEmp(false);
+    } catch (error) {
+      triggerToast("无法打开员工档案", errorMessage(error));
+    }
   };
 
-  const handleSaveEmployeeEdit = () => {
-    if (!editEmpForm) return;
-    const err = validateEmployeeForm(editEmpForm);
-    if (err) {
-      triggerToast("档案校验未通过", err);
+  const handleSaveEmployeeEdit = async () => {
+    const form = useStore.getState().editEmpForm;
+    if (!form) return;
+    const error = validateEmployeeForm(form);
+    if (error) {
+      triggerToast("档案校验未通过", error);
       return;
     }
-    setEmployees((prev) =>
-      prev.map((e) => (e.id === editEmpForm.id ? editEmpForm : e)),
-    );
-    setSelectedEmployee(editEmpForm);
-    setIsEditingEmp(false);
-    triggerToast(
-      "员工全息档案已保存",
-      `${editEmpForm.name}（${editEmpForm.id}）最新资料已更新`,
-    );
+    const ok = await persistEmployeeMutation(() => {
+      useStore
+        .getState()
+        .setEmployees((previous) =>
+          previous.map((employee) =>
+            employee.id === form.id ? form : employee,
+          ),
+        );
+      return {
+        title: "员工全息档案已保存",
+        message: `${form.name}（${form.id}）最新资料已更新`,
+      };
+    });
+    if (ok) {
+      const canonical = useStore
+        .getState()
+        .employees.find((employee) => employee.id === form.id)!;
+      setSelectedEmployee(canonical);
+      setEditEmpForm(structuredClone(canonical));
+      setIsEditingEmp(false);
+    }
   };
 
   const handleCompleteOnboarding = (
     taskId: string,
     checklist: OnboardingTask["checklist"],
-    isPendingMaterials: boolean,
-    pendingMeta: PendingMaterials | null = null,
+    pending: boolean,
+    meta: PendingMaterials | null = null,
   ) => {
-    const toast = completeOnboarding(
-      taskId,
-      checklist,
-      isPendingMaterials,
-      pendingMeta,
+    const before = useStore.getState();
+    const notice = completeOnboarding(taskId, checklist, pending, meta);
+    const next = useStore.getState();
+    const candidate = next.employees.find(
+      (employee) => !before.employees.some((old) => old.id === employee.id),
     );
-    if (toast) triggerToast(toast.title, toast.message);
+    useStore.setState({
+      employees: before.employees,
+      onboardingTasks: before.onboardingTasks,
+    });
+    if (!notice || !candidate) return;
+    useEmployeeDraft.setState({
+      onboarding: { taskId, checklist, pending, meta },
+      creationKey: "onboarding:" + taskId,
+    });
+    setNewEmpForm(candidate);
+    setShowNewModal(true);
+    triggerToast(
+      "请补齐员工必填资料",
+      "材料核验已完成，保存完整档案后才会归档入职单",
+    );
   };
 
-  const handleApproveLifecycle = (taskId: string) => {
-    const toast = approveLifecycle(taskId);
-    if (toast) triggerToast(toast.title, toast.message);
-  };
+  const handleApproveLifecycle = (taskId: string) =>
+    persistEmployeeMutation(() => approveLifecycle(taskId));
 
   const handleRejectLifecycle = (taskId: string, reason: string) => {
     const toast = rejectLifecycle(taskId, reason);
@@ -379,21 +463,12 @@ export function useWorkspace() {
     newRoleName: string,
     clauseMode: string,
     clauseNotes: string,
-  ) => {
-    const toast = renewContract(
-      empId,
-      newEndDate,
-      newRoleName,
-      clauseMode,
-      clauseNotes,
+  ) =>
+    persistEmployeeMutation(() =>
+      renewContract(empId, newEndDate, newRoleName, clauseMode, clauseNotes),
     );
-    if (toast) triggerToast(toast.title, toast.message);
-  };
-
-  const handleTerminateRenewal = (empId: string) => {
-    const toast = terminateRenewal(empId);
-    if (toast) triggerToast(toast.title, toast.message);
-  };
+  const handleTerminateRenewal = (empId: string) =>
+    persistEmployeeMutation(() => terminateRenewal(empId));
 
   const handlePublishJob = (jobForm: JobForm) => {
     const toast = publishJob(jobForm);
@@ -431,13 +506,14 @@ export function useWorkspace() {
       `员工 ${empId} 季度校准等级已更新为 ${grade}`,
     );
   };
-  const handleSyncPerformancePayroll = () => {
-    if (!syncPerformancePayroll()) return;
-    triggerToast(
-      "全员绩效结果已同步",
-      "校准结果已自动关联至本月算薪绩效奖金基数",
-    );
-  };
+  const handleSyncPerformancePayroll = () =>
+    persistEmployeeMutation(() => {
+      if (!syncPerformancePayroll()) return null;
+      return {
+        title: "全员绩效结果已同步",
+        message: "校准结果已自动关联至本月算薪绩效奖金基数",
+      };
+    });
   return {
     activeApp,
     setActiveApp,

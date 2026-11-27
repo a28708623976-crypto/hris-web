@@ -292,9 +292,9 @@ export function ContractsModuleView({
                   <AppleActionButton
                     variant="danger"
                     icon={Ban}
-                    onClick={() => {
-                      onTerminateRenewal(selectedEmp.id);
-                      setSelectedEmp(null);
+                    onClick={async () => {
+                      if (await onTerminateRenewal(selectedEmp.id))
+                        setSelectedEmp(null);
                     }}
                   >
                     到期不再续签
@@ -309,15 +309,15 @@ export function ContractsModuleView({
                     <AppleActionButton
                       variant="primary"
                       icon={Check}
-                      onClick={() => {
-                        onRenewContract(
+                      onClick={async () => {
+                        const saved = await onRenewContract(
                           selectedEmp.id,
                           newEndDate,
                           newRoleName,
                           clauseMode,
                           clauseNotes,
                         );
-                        setSelectedEmp(null);
+                        if (saved) setSelectedEmp(null);
                       }}
                     >
                       保存条款并办理电子续签

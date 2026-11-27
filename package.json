@@ -7,10 +7,10 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && tsc -p worker/tsconfig.json && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node qa/check-state.mjs",
+    "test": "node qa/check-state.mjs && node --import tsx --test qa/backend/*.test.ts",
     "check:routes": "node qa/check-routes.mjs",
     "check:browser": "node qa/browser-smoke.mjs",
-    "format:check": "prettier --check src qa/*.mjs qa/*.ts qa/*.tsx vite.config.ts",
+    "format:check": "prettier --check src shared worker/src worker/scripts worker/tests qa/*.mjs qa/*.ts qa/*.tsx qa/backend/*.mjs vite.config.ts",
     "check:employees": "node qa/employees-smoke.mjs",
     "check:workflows": "node qa/workflows-smoke.mjs",
     "check:self-service": "node qa/self-service-smoke.mjs",
@@ -25,7 +25,8 @@
     "db:migrate": "wrangler d1 migrations apply DB --config worker/wrangler.jsonc --local --persist-to worker/.local",
     "local:init": "node worker/scripts/init-local.mjs",
     "db:reset": "node worker/scripts/reset-local.mjs",
-    "db:seed": "node --import tsx worker/scripts/seed.ts && wrangler d1 execute DB --config worker/wrangler.jsonc --local --persist-to worker/.local --file worker/.local/seed.sql"
+    "db:seed": "node --import tsx worker/scripts/seed.ts && wrangler d1 execute DB --config worker/wrangler.jsonc --local --persist-to worker/.local --file worker/.local/seed.sql",
+    "local:accounts": "node worker/scripts/init-local.mjs --accounts"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",

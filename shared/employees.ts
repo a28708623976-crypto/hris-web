@@ -69,6 +69,7 @@ export const employeeSchema = z
       )
       .max(30),
     attachments: z.record(z.string(), text),
+    onboarding: z.object({ taskId: text, stage: text }).optional(),
     payrollPerformance: z
       .object({
         grade: text,

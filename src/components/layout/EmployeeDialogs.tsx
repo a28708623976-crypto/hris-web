@@ -1,9 +1,11 @@
+import { useEmployeeDraft } from "../../store/employeeDraft";
 import { Check, Edit3, X } from "lucide-react";
 import type { Workspace } from "../../hooks/useWorkspace";
 import { EmployeeStandardFormSections } from "../employees/EmployeeStandardFormSections";
 import { AppleActionButton } from "../ui/AppleActionButton";
 import { StatusBadge } from "../ui/StatusBadge";
 export function EmployeeDialogs({ workspace }: { workspace: Workspace }) {
+  const busy = useEmployeeDraft((state) => state.busy);
   const {
     setActiveNav,
     role,
@@ -65,6 +67,7 @@ export function EmployeeDialogs({ workspace }: { workspace: Workspace }) {
                   variant="primary"
                   icon={Check}
                   onClick={handleCreateEmployee}
+                  disabled={busy}
                 >
                   确认创建完整档案
                 </AppleActionButton>
@@ -173,6 +176,7 @@ export function EmployeeDialogs({ workspace }: { workspace: Workspace }) {
                       variant="primary"
                       icon={Check}
                       onClick={handleSaveEmployeeEdit}
+                      disabled={busy}
                     >
                       保存档案修改
                     </AppleActionButton>

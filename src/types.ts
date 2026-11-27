@@ -68,6 +68,8 @@ export type EmployeeForm = {
 };
 export type Employee = EmployeeForm & {
   id: string;
+  version?: number;
+  onboarding?: { taskId: string; stage: string };
   payrollPerformance?: Pick<
     PerformanceRecord,
     "grade" | "managerComment" | "okrProgress"

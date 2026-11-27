@@ -254,3 +254,35 @@ test("direct D1 read proves encryption and read/write audit without values", asy
     ),
   );
 });
+test("batch updates are all-or-nothing and ordinary accounts cannot invoke them", async () => {
+  const current = (await (await call()).json()).employees;
+  const a = current[0],
+    b = current[1];
+  const stale = await call("/batch", "POST", {
+    employees: [
+      { ...a, baseSalary: 99001 },
+      { ...b, version: b.version + 1, baseSalary: 99002 },
+    ],
+  });
+  assert.equal(stale.status, 409);
+  assert.equal(
+    (await (await call("/" + a.id)).json()).employee.baseSalary,
+    a.baseSalary,
+  );
+  const saved = await call("/batch", "POST", {
+    employees: [
+      { ...a, baseSalary: 31000 },
+      { ...b, baseSalary: 32000 },
+    ],
+  });
+  assert.equal(saved.status, 200);
+  assert.equal((await saved.json()).employees.length, 2);
+  assert.equal(
+    (await call("/batch", "POST", { employees: [a] }, "employee")).status,
+    403,
+  );
+  assert.equal(
+    (await call("/batch", "POST", { employees: [a] }, "dept_head")).status,
+    403,
+  );
+});

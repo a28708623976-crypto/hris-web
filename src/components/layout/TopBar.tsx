@@ -1,3 +1,5 @@
+import { logout } from "../../api/session";
+import { errorMessage } from "../../api/client";
 import {
   Briefcase,
   Check,
@@ -16,7 +18,6 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
     setActiveNav,
     setAtsActiveNav,
     role,
-    setRole,
     setShowSpotlight,
     triggerToast,
     currentUser,
@@ -190,20 +191,17 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
             </kbd>
           </button>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#F5F5F7] text-xs">
-            <span className="text-[#86868B]">视角</span>
-            <select
-              value={role}
-              onChange={(e) =>
-                setRole(e.target.value as import("../../types").Role)
-              }
-              className="font-semibold text-[#1D1D1F] bg-transparent outline-none cursor-pointer"
-            >
-              <option value="HR 主管">HR 主管</option>
-              <option value="部门负责人">部门负责人</option>
-              <option value="普通员工">普通员工</option>
-            </select>
-          </div>
+          <button
+            type="button"
+            className="px-2.5 py-1.5 rounded-xl bg-[#F5F5F7] text-xs text-[#515154] cursor-pointer"
+            onClick={() =>
+              void logout().catch((error) =>
+                triggerToast("退出登录失败", errorMessage(error)),
+              )
+            }
+          >
+            退出登录
+          </button>
 
           <div className="flex items-center gap-2 pl-2 border-l border-black/[0.06]">
             <div className="w-8 h-8 rounded-full bg-[#EFE6FA] text-[#6A1B9A] flex items-center justify-center text-xs font-bold">

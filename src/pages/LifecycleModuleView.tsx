@@ -273,9 +273,9 @@ export function LifecycleModuleView({
                     <AppleActionButton
                       variant="primary"
                       icon={Check}
-                      onClick={() => {
-                        onApproveTask(selectedTask.id);
-                        setSelectedTask(null);
+                      onClick={async () => {
+                        if (await onApproveTask(selectedTask.id))
+                          setSelectedTask(null);
                       }}
                     >
                       同意并归档生效

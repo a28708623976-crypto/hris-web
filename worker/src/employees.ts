@@ -1,3 +1,4 @@
+import { employeeBatch } from "./employee-batch";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { AppEnv } from "./env";
@@ -24,6 +25,7 @@ employees.use(
     onError: (c) => c.json({ error: "档案数据过大" }, 413),
   }),
 );
+employees.route("/", employeeBatch);
 const derived = (employee: EmployeeForm) => ({
   age: calcAge(employee.birthDate),
   tenure: calcTenure(employee.firstWorkDate),

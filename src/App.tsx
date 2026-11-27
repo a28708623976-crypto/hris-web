@@ -1,3 +1,5 @@
+import { AuthBoundary } from "./components/layout/AuthBoundary";
+import { LoginPage } from "./pages/LoginPage";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AtsLayout } from "./components/layout/AtsLayout";
 import Layout from "./components/layout/Layout";
@@ -23,27 +25,33 @@ import {
 export default function App() {
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route index element={<Navigate to="/employees" replace />} />
-        <Route path="dashboard" element={<DashboardOverviewRoute />} />
-        <Route path="employees" element={<EmployeesDirectoryViewRoute />} />
-        <Route path="onboarding" element={<OnboardingModuleViewRoute />} />
-        <Route path="contracts" element={<ContractsModuleViewRoute />} />
-        <Route path="lifecycle" element={<LifecycleModuleViewRoute />} />
-        <Route path="attendance" element={<AttendancePayrollViewRoute />} />
-        <Route path="self-service" element={<SelfServiceModuleViewRoute />} />
-        <Route path="performance" element={<PerformanceModuleViewRoute />} />
-        <Route path="certificates" element={<CertificatesModuleViewRoute />} />
-        <Route path="ats" element={<AtsLayout />}>
-          <Route path="home" element={<Home />} />
-          <Route path="jobs" element={<Jobs />} />
-          <Route path="progress" element={<Progress />} />
-          <Route path="candidates" element={<Candidates />} />
-          <Route path="talent" element={<Talent />} />
-          <Route path="offers" element={<Offers />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="jobs/new" element={<JobCreate />} />
-          <Route index element={<Navigate to="/ats/home" replace />} />
+      <Route path="login" element={<LoginPage />} />
+      <Route element={<AuthBoundary />}>
+        <Route element={<Layout />}>
+          <Route index element={<Navigate to="/employees" replace />} />
+          <Route path="dashboard" element={<DashboardOverviewRoute />} />
+          <Route path="employees" element={<EmployeesDirectoryViewRoute />} />
+          <Route path="onboarding" element={<OnboardingModuleViewRoute />} />
+          <Route path="contracts" element={<ContractsModuleViewRoute />} />
+          <Route path="lifecycle" element={<LifecycleModuleViewRoute />} />
+          <Route path="attendance" element={<AttendancePayrollViewRoute />} />
+          <Route path="self-service" element={<SelfServiceModuleViewRoute />} />
+          <Route path="performance" element={<PerformanceModuleViewRoute />} />
+          <Route
+            path="certificates"
+            element={<CertificatesModuleViewRoute />}
+          />
+          <Route path="ats" element={<AtsLayout />}>
+            <Route path="home" element={<Home />} />
+            <Route path="jobs" element={<Jobs />} />
+            <Route path="progress" element={<Progress />} />
+            <Route path="candidates" element={<Candidates />} />
+            <Route path="talent" element={<Talent />} />
+            <Route path="offers" element={<Offers />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="jobs/new" element={<JobCreate />} />
+            <Route index element={<Navigate to="/ats/home" replace />} />
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/employees" replace />} />
