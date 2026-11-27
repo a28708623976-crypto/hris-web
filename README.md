@@ -70,3 +70,5 @@ npm run check:private
 - [历史前端原型验收索引](qa/VERIFICATION.md)
 
 `shared/` 保存前后端共用的 Zod 校验、日期与附件规则。`worker/migrations/` 管理 D1 结构，`worker/scripts/` 提供固定使用 `--local` 的初始化脚本。项目没有部署脚本，请勿执行 Wrangler login、deploy、资源 create 或 `--remote` 命令。
+
+更新后如有新增迁移，可运行 `npm run db:migrate`，只迁移本地结构，不清空员工或审计数据。默认 Worker 配置为 production，开发模式仅由 `npm run dev` 的命令行参数启用。

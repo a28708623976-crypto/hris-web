@@ -44,7 +44,7 @@ const call = (path: string, body?: unknown, cookie?: string) => {
   };
   return (async () => {
     const response = await app.request(
-      "https://local.test/api" + path,
+      "https://localhost/api" + path,
       {
         method: body === undefined ? "GET" : "POST",
         headers: {
@@ -386,4 +386,72 @@ test("logout-all revokes every current-user device and leaves another user's ses
   assert.equal((await call("/auth/me", undefined, cookies[1])).status, 401);
   assert.equal((await call("/auth/me", undefined, cookies[2])).status, 200);
   assert.equal((await call("/auth/logout-all", {})).status, 401);
+});
+
+test("production configuration and non-loopback dev hosts never print codes", async () => {
+  const config = JSON.parse(
+    readFileSync("worker/wrangler.jsonc", "utf8").replace(/,\s*([}\]])/g, "$1"),
+  );
+  assert.equal(config.vars.ENV, "production");
+  const old = console.log;
+  let lines: string[] = [],
+    sends = 0;
+  env.EMAIL_FROM = randomToken() + "@example.invalid";
+  env.EMAIL = {
+    send: async () => {
+      sends++;
+    },
+  };
+  console.log = (value: unknown) => {
+    lines.push(String(value));
+  };
+  const cases = [
+    [config.vars.ENV, "https://localhost", false],
+    [config.vars.ENV, "https://127.0.0.1", false],
+    [config.vars.ENV, "https://production.test", false],
+    ["dev", "https://production.test", false],
+    ["dev", "https://localhost.evil.test", false],
+    ["dev", "https://127.0.0.1.evil.test", false],
+    ["dev", "https://[::1]", false],
+    ["dev", "https://localhost.", false],
+    ["dev", "https://localhost", true],
+    ["dev", "https://127.0.0.1", true],
+  ] as const;
+  try {
+    for (const [mode, origin, prints] of cases) {
+      await env.DB.exec("DELETE FROM auth_rate_events");
+      env.ENV = mode;
+      lines = [];
+      const before = sends;
+      const tasks: Promise<unknown>[] = [];
+      const context = {
+        waitUntil(task: Promise<unknown>) {
+          tasks.push(task);
+        },
+        passThroughOnException() {},
+        props: {},
+      };
+      const response = await app.request(
+        origin + "/api/auth/request-code",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            host: "localhost",
+            "x-forwarded-host": "localhost",
+          },
+          body: JSON.stringify({ email }),
+        },
+        env,
+        context,
+      );
+      assert.equal(response.status, 200);
+      await Promise.all(tasks);
+      assert.equal(lines.length, prints ? 1 : 0, mode + " " + origin);
+      assert.equal(sends - before, prints ? 0 : 1, mode + " " + origin);
+    }
+  } finally {
+    console.log = old;
+    env.ENV = "dev";
+  }
 });

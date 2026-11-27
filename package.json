@@ -21,7 +21,7 @@
     "check:dashboard": "node qa/dashboard-smoke.mjs",
     "check:ats": "node qa/ats-smoke.mjs",
     "test:worker": "tsx --test --test-concurrency=1 worker/tests/*.test.ts",
-    "dev:worker": "npm run build && wrangler dev --config worker/wrangler.jsonc --local --persist-to worker/.local",
+    "dev:worker": "node worker/scripts/init-local.mjs && npm run build && wrangler dev --config worker/wrangler.jsonc --local --persist-to worker/.local --var ENV:dev",
     "db:migrate": "wrangler d1 migrations apply DB --config worker/wrangler.jsonc --local --persist-to worker/.local",
     "local:init": "node worker/scripts/init-local.mjs",
     "db:reset": "node worker/scripts/reset-local.mjs",

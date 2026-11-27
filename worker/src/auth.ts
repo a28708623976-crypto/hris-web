@@ -94,7 +94,10 @@ auth.post("/request-code", async (c) => {
         )
           .bind(emailHash, codeHash, nonce, now + 600000)
           .run();
-        if (c.env.ENV === "dev")
+        if (
+          c.env.ENV === "dev" &&
+          ["localhost", "127.0.0.1"].includes(new URL(c.req.url).hostname)
+        )
           console.log(`[DEV login] ${email} code=${code} (10 minutes)`);
         else {
           try {

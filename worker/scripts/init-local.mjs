@@ -8,6 +8,18 @@ const accounts = process.argv.includes("--accounts");
 const prior = existing
   ? parseEnv(readFileSync("worker/.dev.vars", "utf8"))
   : {};
+if (existing && Object.hasOwn(prior, "ENV")) {
+  const contents = readFileSync("worker/.dev.vars", "utf8");
+  writeFileSync(
+    "worker/.dev.vars",
+    contents
+      .split(/\r?\n/)
+      .filter((line) => !/^\s*(?:export\s+)?ENV\s*=/.test(line))
+      .join("\n"),
+    { mode: 0o600 },
+  );
+  console.log("已移除旧 ENV 覆盖；开发模式仅由启动命令传入。");
+}
 if (existing && !accounts) {
   console.log("本地配置已存在，保留原密钥和账号。");
   process.exit(0);
@@ -33,7 +45,6 @@ try {
   }
   if (new Set(emails).size !== 3) throw new Error("请使用三个不同的测试邮箱");
   const vars = [
-    "ENV=dev",
     "AUTH_SECRET=" + (prior.AUTH_SECRET || randomBytes(32).toString("hex")),
     "ENCRYPTION_KEY=" +
       (prior.ENCRYPTION_KEY || randomBytes(32).toString("base64")),

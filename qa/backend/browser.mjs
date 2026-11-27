@@ -52,6 +52,8 @@ export async function runBrowser(scope = "all") {
     cli,
     [
       "dev",
+      "--var",
+      "ENV:dev",
       "--config",
       "worker/wrangler.jsonc",
       "--local",

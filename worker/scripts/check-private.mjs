@@ -49,7 +49,14 @@ const config = JSON.parse(
   readFileSync("worker/wrangler.jsonc", "utf8").replace(/,\s*([}\]])/g, "$1"),
 );
 assert.equal(config.account_id, undefined);
-assert.equal(config.vars.ENV, "dev");
+assert.equal(config.vars.ENV, "production");
+assert.equal(
+  Object.hasOwn(vars, "ENV"),
+  false,
+  "dev.vars must not override the production default",
+);
+const scripts = JSON.parse(readFileSync("package.json", "utf8")).scripts;
+assert.ok(scripts["dev:worker"].includes("--var ENV:dev"));
 assert.equal(config.send_metrics, false);
 for (const resource of [
   ...config.d1_databases,
