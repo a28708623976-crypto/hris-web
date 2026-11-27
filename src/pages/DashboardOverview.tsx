@@ -23,9 +23,17 @@ export function DashboardOverview({
   const isEmployee = role === "普通员工";
   const isHr = role === "HR 主管";
   const {
-    activeEmps, probationCount, expiringCount, pendingLifecycleCount,
-    pendingOnboardingCount, waitingOnboardingCount, deptList,
-    attendanceCompliance, pendingAppeals, annualLeaveDays, compensatoryHours,
+    activeEmps,
+    probationCount,
+    expiringCount,
+    pendingLifecycleCount,
+    pendingOnboardingCount,
+    waitingOnboardingCount,
+    deptList,
+    attendanceCompliance,
+    pendingAppeals,
+    annualLeaveDays,
+    compensatoryHours,
   } = dashboardSummary(employees, onboardingTasks, lifecycleTasks, currentUser);
 
   return (
@@ -95,12 +103,12 @@ export function DashboardOverview({
           <div className="text-3xl font-bold text-[#0071E3] mt-3 tabular-nums">
             {isEmployee
               ? `${annualLeaveDays} 天`
-              : `${
-                  pendingOnboardingCount + pendingLifecycleCount
-                } 项`}
+              : `${pendingOnboardingCount + pendingLifecycleCount} 项`}
           </div>
           <div className="text-[11px] text-[#86868B] mt-1.5">
-            {isEmployee ? `可用调休余额 ${compensatoryHours.toFixed(1)} 小时` : "点击进入入职与转调离审批"}
+            {isEmployee
+              ? `可用调休余额 ${compensatoryHours.toFixed(1)} 小时`
+              : "点击进入入职与转调离审批"}
           </div>
         </div>
 

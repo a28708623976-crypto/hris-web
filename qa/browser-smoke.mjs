@@ -24,8 +24,12 @@ const referenceUrl = (role, route) =>
   "/qa/reference.html?state=" +
   encodeURIComponent(JSON.stringify(referenceState(role, route)));
 const errors = [];
-for (const page of [app, reference])
+for (const page of [app, reference]) {
   page.on("pageerror", (e) => errors.push(e.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push("console: " + message.text());
+  });
+}
 mkdirSync("qa/artifacts", { recursive: true });
 const results = [];
 let activeCase = "initialization";

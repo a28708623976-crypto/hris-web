@@ -18,8 +18,12 @@ export async function moduleHarness(suite) {
     reference = await context.newPage();
   const errors = [],
     checks = [];
-  for (const page of [app, reference])
+  for (const page of [app, reference]) {
     page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push("console: " + message.text());
+    });
+  }
   await reference.addInitScript(() => {
     const raw = new URL(location.href).searchParams.get("state");
     if (raw) globalThis.__PEOPLEOS_REFERENCE__ = JSON.parse(raw);

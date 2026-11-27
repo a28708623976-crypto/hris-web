@@ -1,55 +1,17 @@
-# PeopleOS 原型底座验收
+# PeopleOS 验收索引
 
-验收日期：2026-11-26。本记录替代旧版 Spec / 五角色验收记录。
+最新完整验收：2026-11-27，见 [剩余模块原型对齐与完整回归](ALIGNMENT_VERIFICATION.md)。原型未修改；所有模块以 `prototype/peopleos_hris_pro.tsx` 为基准，员工自助保留明确授权的多级表单例外。
 
-## 基准与范围
+- [员工档案](EMPLOYEES_VERIFICATION.md)
+- [入职与转调离](WORKFLOWS_VERIFICATION.md)
+- [员工自助多级申请](SELF_SERVICE_VERIFICATION.md)
+- [合同管理](CONTRACTS_VERIFICATION.md)
+- [考勤薪资](ATTENDANCE_VERIFICATION.md)
+- [证明文件](CERTIFICATES_VERIFICATION.md)
+- [绩效考核](PERFORMANCE_VERIFICATION.md)
+- [工作台](DASHBOARD_VERIFICATION.md)
+- [ATS 招聘](ATS_VERIFICATION.md)
 
-- 唯一基准：`prototype/peopleos_hris_pro.tsx`，未修改。
-- SHA-256：`929d2b9c30dd33e31a9771805c5bb34cd3ce64c5012787adc9d088c5a9c4976f`。`npm run check:routes` 会核验该哈希。
-- 本次只迁移原型已有底座及页面，不增加业务模块功能。基础类型使用 TypeScript strict，`src/` 无 `any`、`@ts-ignore` 或 `@ts-nocheck`。
-- Tailwind CSS / `@tailwindcss/vite`：4.3.5；lucide-react：0.468.0（原项目已安装，当前已确认解析与页面图标正常）。移除 v3 的配置与 CSS 指令，接入 v4 官方 Vite 插件。
+构建、状态测试、29 组可访问路由对照、17 路由×3 角色共 51 组浏览器检查、全部模块专项均通过。完整浏览器回归覆盖运行时异常和控制台错误，结果为 0。
 
-## 已通过检查
-
-| 命令                    | 检查内容                                                                                                             | 结果 |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------- | ---- |
-| `npm run build`         | TypeScript strict + Vite 生产构建                                                                                    | PASS |
-| `npm test`              | 与原型对照日期/年龄/工龄/试用期/合同计算、空表单默认值及覆盖值；六组业务初始数据；Zustand 函数更新与初始数据不受污染 | PASS |
-| `npm run check:routes`  | 29 组可访问角色/路由的服务端渲染：26 组完整对照原型；3 组员工自助仅豁免授权表单和历史路径调整，外层保持一致；无 NaN  | PASS |
-| `npm run check:browser` | 17 路由 × 3 角色，共 51 组；26 组完整原型截图对照、3 组员工自助新表单及外层检查，22 组受限访问正常跳转               | PASS |
-| `npm run format:check`  | 项目源码与 QA 脚本格式                                                                                               | PASS |
-| `git diff --check`      | 补丁空白检查                                                                                                         | PASS |
-
-浏览器为独立无头 Chrome 配置，开发服务器为 `http://127.0.0.1:5173`。截图对照采用同一浏览器、1440 × 1120 视口和同一套 Tailwind v4 样式。使用标准 Pixelmatch 感知比对（threshold 0.1、忽略抗锯齿边缘），要求有意义的差异像素为 0。DOM、文案与样式类另外逐项完全比对，不设容差。
-
-实际计算样式已核验：`shadow-2xs` 非空阴影、`backdrop-blur-xs` 为 `blur(4px)`、`bg-[#0071E3]` 为 `rgb(0, 113, 227)`、`rounded-xl` 为 `12px`、`text-[13px]` 为 `13px`。原型任意色值、间距、字体、图标、阴影和布局由页面截图比对覆盖。
-
-## 交互检查
-
-- 员工目录姓名搜索；全息档案打开、编辑与银行卡页签；新增员工弹窗及必填校验 Toast。
-- 入职材料核验弹窗；薪资明细解锁；绩效校准弹窗。
-- 员工自助两级级联选择器打开、一级悬停及二级选项展示。
-- ATS 看板/列表切换；职位发布全屏页与返回。保留原型进入前选中的导航项。
-- 候选人 80% 宽抽屉；Offer 工作台、电子签确认、转入 HRIS；再次转入更新关联单而不重复新增入职单。
-- 浏览器前进、后退、独立路由刷新；⌘K 搜索并跳转；离开再进入页面后局部筛选按原型重置。
-- HRIS / ATS 子应用切换；从 ATS 切普通员工回到本人档案，EMP005 / 李明且只显示本人一条记录。
-- 390 × 844 手机视口与原型截图一致。保持原型原有的移动端布局，包括其溢出行为，未额外重设计。
-- 上述检查期间应用与原型参考页的浏览器运行时错误均为 0。
-
-## 复现与边界
-
-先运行 `npm run dev`，再运行 `npm run check:browser`。脚本只读原型，生成忽略提交的 `qa/.prototype-reference.tsx` 用于指定角色与初始页面；截图及 JSON 结果在忽略提交的 `qa/artifacts/`。
-
-权限菜单、身份映射、数据过滤、薪资锁、固定日期及模拟业务动作均依原型保留。刷新后恢复初始状态；本次未增加持久化、真实后端集成或修改原型中的证明文件下载实现。验收覆盖本地 Mock 前端，不代表真实业务系统验收。
-
-## 员工档案专项补充
-
-本轮对员工列表、表单、角色与联动逐项复核，`npm run check:employees` 通过 88 项检查，`npm test` 新增的 23 个员工校验用例通过。修正 HR 筛选状态在普通员工视角残留的问题；原型文件未修改。完整范围及原型边界行为说明见 [员工档案专项对照验收](EMPLOYEES_VERIFICATION.md)。
-
-## 入职与转调离专项补充
-
-本轮通过 45 项流程浏览器专项及 48 项流程状态检查。修正手动发起默认工号导致错改员工的问题，并补齐建档防重和角色部门范围的状态检查；页面保持原型结构，原型文件未修改。完整范围及明确修正的原型边界行为见 [流程专项记录](WORKFLOWS_VERIFICATION.md)。
-
-## 员工自助多级申请补充
-
-员工自助发起申请已按用户明确授权脱离原型二级菜单，改为树配置和末级动态表单。其他页面继续完整对照原型。配置、校验、文件字段、完整路径记录及多级键盘交互详见 [员工自助专项记录](SELF_SERVICE_VERIFICATION.md)。
+本地复现：先 `npm run dev`，再执行 `npm run build`、`npm test`、`npm run check:routes`、`npm run check:browser`，以及 `package.json` 中各模块的 `check:*`。参考源由 QA 只读生成到忽略目录，不允许修改权威原型；截图/下载/JSON 结果在 `qa/artifacts/`。当前权限与业务动作仍是原型本地 Mock 前端，边界与明确差异见最新完整记录。

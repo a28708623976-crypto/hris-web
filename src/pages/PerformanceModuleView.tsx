@@ -48,56 +48,58 @@ export function PerformanceModuleView({
           <div className="bg-white rounded-2xl p-6 border border-black/[0.06] text-sm text-[#86868B]">
             暂无本人的绩效记录
           </div>
-        ) : <div className="bg-white rounded-2xl p-6 border border-black/[0.06] space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="text-base font-bold text-[#1D1D1F]">
-                {myPerf.name} · {myPerf.department}（{myPerf.role}）
+        ) : (
+          <div className="bg-white rounded-2xl p-6 border border-black/[0.06] space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="text-base font-bold text-[#1D1D1F]">
+                  {myPerf.name} · {myPerf.department}（{myPerf.role}）
+                </div>
+                <div className="text-xs text-[#86868B] mt-1">
+                  考核周期：2026 年 Q4 季度
+                </div>
               </div>
-              <div className="text-xs text-[#86868B] mt-1">
-                考核周期：2026 年 Q4 季度
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 rounded-full bg-[#EBF5FF] text-[#0071E3] text-xs font-bold">
+                  校准等级：{myPerf.grade}
+                </span>
+                <StatusBadge status={myPerf.status} />
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="px-3 py-1 rounded-full bg-[#EBF5FF] text-[#0071E3] text-xs font-bold">
-                校准等级：{myPerf.grade}
-              </span>
-              <StatusBadge status={myPerf.status} />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-semibold">
-              <span>季度 OKR 关键结果总达成度</span>
-              <span>{myPerf.okrProgress}%</span>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-semibold">
+                <span>季度 OKR 关键结果总达成度</span>
+                <span>{myPerf.okrProgress}%</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-[#F5F5F7] overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-[#1D1D1F]"
+                  style={{ width: `${myPerf.okrProgress}%` }}
+                />
+              </div>
             </div>
-            <div className="h-2.5 rounded-full bg-[#F5F5F7] overflow-hidden">
-              <div
-                className="h-full rounded-full bg-[#1D1D1F]"
-                style={{ width: `${myPerf.okrProgress}%` }}
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div className="p-4 rounded-2xl bg-[#FAFAFC] border border-black/[0.05]">
-              <div className="font-bold text-[#1D1D1F] mb-1.5">
-                本季度 OKR 关键成果自评
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="p-4 rounded-2xl bg-[#FAFAFC] border border-black/[0.05]">
+                <div className="font-bold text-[#1D1D1F] mb-1.5">
+                  本季度 OKR 关键成果自评
+                </div>
+                <p className="text-[#515154] leading-relaxed">
+                  {myPerf.okrSummary}
+                </p>
               </div>
-              <p className="text-[#515154] leading-relaxed">
-                {myPerf.okrSummary}
-              </p>
-            </div>
-            <div className="p-4 rounded-2xl bg-[#FAFAFC] border border-black/[0.05]">
-              <div className="font-bold text-[#1D1D1F] mb-1.5">
-                直属主管校准评语
+              <div className="p-4 rounded-2xl bg-[#FAFAFC] border border-black/[0.05]">
+                <div className="font-bold text-[#1D1D1F] mb-1.5">
+                  直属主管校准评语
+                </div>
+                <p className="text-[#515154] leading-relaxed">
+                  {myPerf.managerComment}
+                </p>
               </div>
-              <p className="text-[#515154] leading-relaxed">
-                {myPerf.managerComment}
-              </p>
             </div>
           </div>
-        </div>}
+        )}
       </div>
     );
   }
